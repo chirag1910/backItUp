@@ -1,0 +1,23 @@
+﻿<fw:AcrylicWindow x:Class="BackItUp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"
+        xmlns:local="clr-namespace:BackItUp"
+        mc:Ignorable="d"
+        Title="BackItUp" Height="450" Width="800"
+        WindowState="Normal"
+        NoiseOpacity="0"
+        MinHeight="350"
+        MinWidth="600">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="navbarColumn" Width="60"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Frame x:Name="navbarFrame" Grid.Column="0" Source="/Pages/Navbar.xaml"></Frame>
+        <Frame x:Name="contentFrame" Grid.Column="1" Source="/Pages/Home.xaml" NavigationUIVisibility="Hidden"></Frame>
+    </Grid>
+</fw:AcrylicWindow>
