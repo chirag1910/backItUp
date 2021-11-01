@@ -53,7 +53,7 @@ namespace BackItUp
             try
             {
                 zipper = new Zipper();
-                zipper.Zip(fileList, zipPath, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+                zipper.Zip(fileList, new string[0], zipPath, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
             }
             catch (Exception e)
             {

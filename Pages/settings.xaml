@@ -20,6 +20,7 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
@@ -137,6 +138,39 @@
                     Focusable="False"
                   materialDesign:HintAssist.Hint="Set time"
                     materialDesign:FontSize="18"/>
+            </StackPanel>
+
+            <!--============-->
+           <TextBlock Grid.Row="5" Grid.Column="0" Margin="20"
+                   Style="{StaticResource SubtitleTextBlockStyle}" 
+                   Foreground="{DynamicResource SystemBaseHighColorBrush}"
+                   Text="Ignore file type or folder"/>
+            <StackPanel Grid.Row="5" Grid.Column="1" Margin="20" Orientation="Horizontal">
+                <TextBox x:Name="ignoreTextBox"  
+                        Style="{StaticResource TextBoxRevealStyle}"
+                         FontSize="18"
+                         Background="{DynamicResource SystemAltLowColorBrush}"
+                         Foreground="{DynamicResource SystemBaseMediumHighColorBrush}"
+                         VerticalContentAlignment="Center"
+                         IsReadOnly="False" TextWrapping="Wrap" MaxWidth="500"
+                         ToolTip="(',' separated values) Example: cache,.exe,logs,.pyc"/>
+                <Button Style="{StaticResource ButtonRoundRevealStyle}"
+                        Height="35" Width="35" Padding="5"
+                        Background="Transparent"
+                        HorizontalAlignment="Left" Margin="20 0 0 0" ToolTip="Reset to default"
+                        Click="resetIgnore">
+                    <Grid>
+                        <Image Source="/Images/reset.png" VerticalAlignment="Center"></Image>
+                        <Rectangle>
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="{DynamicResource SystemBaseHighColor}"/>
+                            </Rectangle.Fill>
+                            <Rectangle.OpacityMask>
+                                <ImageBrush ImageSource="/Images/reset.png"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                    </Grid>
+                </Button>
             </StackPanel>
 
         </Grid>

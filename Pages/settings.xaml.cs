@@ -30,24 +30,24 @@ namespace BackItUp.Pages
             String settings_file_path = dir_path + "\\settingsPreferences.json";
 
             String dataString = File.ReadAllText(settings_file_path);
-            JObject data = JObject.Parse(dataString);
+            SettingsPreferences data = JsonConvert.DeserializeObject<SettingsPreferences>(dataString);
 
-            var zipFileDir = data["saveLocation"].ToString().Substring(data["saveLocation"].ToString().LastIndexOf("\\") + 1);
+            var zipFileDir = data.saveLocation.Substring(data.saveLocation.LastIndexOf("\\") + 1);
             savePathTextBox.Text = zipFileDir;
 
             if(zipFileDir.Length == 0)
             {
-                savePathTextBox.Text = data["saveLocation"].ToString();
+                savePathTextBox.Text = data.saveLocation;
             }
-            savePathTextBox.ToolTip = data["saveLocation"].ToString();
-            saveAsTextBox.Text = data["saveAs"].ToString();
-            selectedTime = (DateTime)data["backupTime"];
+            savePathTextBox.ToolTip = data.saveLocation;
+            saveAsTextBox.Text = data.saveAs;
+            selectedTime = (DateTime)data.backupTime;
             
 
             backupTimePicker.SelectedTime = selectedTime;
 
 
-            if (Boolean.Parse(data["autoBackup"].ToString()))
+            if (data.autoBackup)
             {
                 automaticBackupRB.SelectedIndex = 0;
                 turnOnAutoBackup((DateTime)selectedTime);
@@ -57,6 +57,15 @@ namespace BackItUp.Pages
                 automaticBackupRB.SelectedIndex = 1;
                 turnOffAutoBackup();
             }
+
+            // ignores
+            String ignoreString = "";
+            String[] ignoreArray = data.ignore != null ? data.ignore : new string[0] { };
+            for(var i = 0; i < ignoreArray.Length; i++)
+            {
+                ignoreString += ignoreArray[i] + (i != ignoreArray.Length-1 ? "," : "");
+            }
+            ignoreTextBox.Text = ignoreString;
 
             setupListeners();
         }
@@ -68,6 +77,10 @@ namespace BackItUp.Pages
                 saveSettings();
             };
             saveAsTextBox.TextChanged += (_, __) =>
+            {
+                saveSettings();
+            };
+            ignoreTextBox.TextChanged += (_, __) =>
             {
                 saveSettings();
             };
@@ -94,8 +107,14 @@ namespace BackItUp.Pages
             settingsPreferences.saveLocation = savePathTextBox.ToolTip.ToString();
             settingsPreferences.saveAs = saveAsTextBox.Text;
             settingsPreferences.backupTime = (DateTime)selectedTime;
-
-            String dataString = JsonConvert.SerializeObject(settingsPreferences);
+            if (ignoreTextBox.Text.Trim().Length > 0)
+            {
+                settingsPreferences.ignore = ignoreTextBox.Text.Split(',');
+            }
+            else
+            {
+                settingsPreferences.ignore = new String[0];
+            }
 
             String dataStringToWrite = JsonConvert.SerializeObject(settingsPreferences);
             File.WriteAllText(settings_file_path, dataStringToWrite);
@@ -171,6 +190,12 @@ namespace BackItUp.Pages
             {
                 turnOnAutoBackup((DateTime)selectedTime);
             }
+            saveSettings();
+        }
+
+        private void resetIgnore(object sender, RoutedEventArgs e)
+        {
+            ignoreTextBox.Text = "";
             saveSettings();
         }
     }

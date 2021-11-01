@@ -8,5 +8,6 @@ namespace BackItUp
         public String saveLocation { get; set; }
         public String saveAs { get; set; }
         public DateTime backupTime { get; set; }
+        public String[] ignore { get; set; }
     }
 }

@@ -23,11 +23,11 @@ namespace BackItUp
         private String prevZipPath = "";
         private bool cancelButtonClicked = false;
 
-        public void Zip(string[] paths, string outputFilePath, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
+        public void Zip(string[] paths, string[] ignores, string outputFilePath, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
         {
             var listener = new ProgressListener(fileList, progressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
             listener.StartedCalculatingFiles();
-            createTree(paths);
+            createTree(paths, ignores);
             zipPath = outputFilePath.Substring(0, outputFilePath.LastIndexOf("\\")+1) + ".~" + outputFilePath.Substring(outputFilePath.LastIndexOf("\\") + 1);
             prevZipPath = outputFilePath;
 
@@ -45,12 +45,38 @@ namespace BackItUp
             }
         }
 
-        private void createTree(string[] paths)
+        private Boolean isInIgnore(string path, string[] ignores)
+        {
+            for(var i = 0; i < ignores.Length; i++)
+            {
+                FileAttributes type = File.GetAttributes(path);
+
+                if (path.Contains(ignores[i].Trim()) && type.HasFlag(FileAttributes.Directory))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private Boolean isInArray(string value, string[] array)
+        {
+            for (var i = 0; i < array.Length; i++)
+            {
+                if (value == array[i].Trim())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void createTree(string[] paths, string[] ignores)
         {
             foreach(String path in paths)
             {
 
-                if (path != null)
+                if (path != null && !isInIgnore(path, ignores))
                 {
                     FileAttributes type = File.GetAttributes(path);
 
@@ -68,14 +94,17 @@ namespace BackItUp
                             }
                             else
                             {
-                                createTree(dirs);
-                                createTree(files);
+                                createTree(dirs, ignores);
+                                createTree(files, ignores);
                             }
                         }
                         else
                         {
-                            fileList.Add(path);
-                            allFilesSize += new FileInfo(path).Length;
+                            if (!isInArray(Path.GetExtension(path), ignores))
+                            {
+                                fileList.Add(path);
+                                allFilesSize += new FileInfo(path).Length;
+                            }
                         }
                     }
                     catch (Exception e)

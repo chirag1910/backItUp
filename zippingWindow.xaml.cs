@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Linq;
 using System.Threading;
+using Newtonsoft.Json;
 
 namespace BackItUp
 {
@@ -75,19 +76,19 @@ namespace BackItUp
                 String settings_file_path = dir_path + "\\settingsPreferences.json";
 
                 dataString = File.ReadAllText(settings_file_path);
-                data = JObject.Parse(dataString);
+                SettingsPreferences settingsData = JsonConvert.DeserializeObject<SettingsPreferences>(dataString);;
 
-                var zipPath = data["saveLocation"].ToString();
+                var zipPath = settingsData.saveLocation;
 
                 if (!zipPath.EndsWith("\\"))
                 {
                     zipPath += "\\";
                 }
 
-                zipPath += data["saveAs"].ToString() + ".zip";
+                zipPath += settingsData.saveAs + ".zip";
                 this.zipPath = zipPath;
                 zipper = new Zipper();
-                zipper.Zip(stringResults, zipPath, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+                zipper.Zip(stringResults, settingsData.ignore, zipPath, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
                 Thread.Sleep(2000);
                 this.Dispatcher.Invoke(() =>
                 {

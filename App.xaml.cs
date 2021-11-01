@@ -75,6 +75,7 @@ namespace BackItUp
                 settingsPreferences.saveLocation = dowloadPath;
                 settingsPreferences.saveAs = "BackItUp backup";
                 settingsPreferences.backupTime = new DateTime(2001, 1, 1, 0, 0, 0);
+                settingsPreferences.ignore = new String[0] { };
 
                 String dataString = JsonConvert.SerializeObject(settingsPreferences);
 
