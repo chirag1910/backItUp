@@ -65,9 +65,6 @@ namespace BackItUp.Pages
                     info.Arguments = "--startzip anyvaluedoesntmatter --showwindow " + Boolean.TrueString + " --pickFromReg " + Boolean.TrueString;
                     Process.Start(info);
 
-
-                    //zippingWindowTemp window = new zippingWindowTemp(fileNames, dlg.FileName);
-                    //window.Show();
                 }
 
                 
@@ -93,8 +90,28 @@ namespace BackItUp.Pages
 
                 if (result == true)
                 {
-                    zippingWindowTemp window = new zippingWindowTemp(fileNames, dlg.FileName);
-                    window.Show();
+                    var fileListKey = Registry.CurrentUser.CreateSubKey("Software\\BackItUp\\ZipCommand\\filelist");
+                    var zipPathKey = Registry.CurrentUser.CreateSubKey("Software\\BackItUp\\ZipCommand\\zipPath");
+                    fileListKey.SetValue("", fileNames.Length);
+                    for (int counter = 0; counter < fileNames.Length; counter++)
+                    {
+                        fileListKey.SetValue(counter.ToString(), fileNames[counter]);
+                    }
+                    zipPathKey.SetValue("", dlg.FileName);
+
+
+
+
+
+
+                    String applicationPath = AppDomain.CurrentDomain.BaseDirectory + AppDomain.CurrentDomain.FriendlyName;
+                    var info = new ProcessStartInfo();
+                    info.CreateNoWindow = false;
+                    info.UseShellExecute = true;
+                    info.FileName = applicationPath;
+                    info.Arguments = "--startzip anyvaluedoesntmatter --showwindow " + Boolean.TrueString + " --pickFromReg " + Boolean.TrueString;
+                    Process.Start(info);
+
                 }
             }
         }
