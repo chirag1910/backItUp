@@ -2,3 +2,6 @@
 bin
 
 .vs/
+
+Debug/
+Release/

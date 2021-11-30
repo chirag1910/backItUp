@@ -2136,23 +2136,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\saksh\\.nuget\\packages\\": {},
-    "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
+    "C:\\Users\\chira\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\BackItUp\\BackItUp.csproj",
+      "projectUniqueName": "F:\\program\\c#\\BackItUp\\BackItUp.csproj",
       "projectName": "BackItUp",
-      "projectPath": "F:\\BackItUp\\BackItUp.csproj",
-      "packagesPath": "C:\\Users\\saksh\\.nuget\\packages\\",
-      "outputPath": "F:\\BackItUp\\obj\\",
+      "projectPath": "F:\\program\\c#\\BackItUp\\BackItUp.csproj",
+      "packagesPath": "C:\\Users\\chira\\.nuget\\packages\\",
+      "outputPath": "F:\\program\\c#\\BackItUp\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
-      ],
       "configFilePaths": [
-        "C:\\Users\\saksh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\chira\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -2233,7 +2229,7 @@
             "privateAssets": "none"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.301\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.402\\RuntimeIdentifierGraph.json"
       }
     }
   },

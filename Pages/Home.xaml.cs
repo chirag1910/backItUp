@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Collections.ObjectModel;
 using System.Threading;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 
 namespace BackItUp.Pages
 {
@@ -83,9 +84,19 @@ namespace BackItUp.Pages
             Process.Start(info);
         }
 
-        private void RefreshClick(object sender, RoutedEventArgs e)
+        private void ClearListClick(object sender, RoutedEventArgs e)
         {
+            String dir_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BackItUp\\locals";
+            String log_file_path = dir_path + "\\logsPreferences.json";
+
+            LogsPreferences logsPreferences = new LogsPreferences();
+            logsPreferences.logs = new BackupLogResult[0] { };
+
+            String dataStringToWrite = JsonConvert.SerializeObject(logsPreferences);
+            File.WriteAllText(log_file_path, dataStringToWrite);
+
             loadBackUpLogs();
+
         }
     }
 }

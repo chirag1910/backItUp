@@ -22,26 +22,28 @@
                    Margin="15" Foreground="{DynamicResource SystemBaseHighColorBrush}"
                    Text="Backup your important files automatically">
         </TextBlock>
+        
         <Button Style="{StaticResource ButtonRoundRevealStyle}"
                         Height="35" Width="35" Padding="5"
                         Background="Transparent"
                 
                Grid.Row="0"
                 VerticalAlignment="Top"
-                        HorizontalAlignment="Right" Margin="20" ToolTip="Refresh List"
-                        Click="RefreshClick">
+                        HorizontalAlignment="Right" Margin="20" ToolTip="Clear List"
+                        Click="ClearListClick">
             <Grid>
-                <Image Source="/Images/reset.png" VerticalAlignment="Center"></Image>
+                <Image Source="/Images/delete.png" VerticalAlignment="Center"></Image>
                 <Rectangle>
                     <Rectangle.Fill>
                         <SolidColorBrush Color="{DynamicResource SystemBaseHighColor}"/>
                     </Rectangle.Fill>
                     <Rectangle.OpacityMask>
-                        <ImageBrush ImageSource="/Images/reset.png"/>
+                        <ImageBrush ImageSource="/Images/delete.png"/>
                     </Rectangle.OpacityMask>
                 </Rectangle>
             </Grid>
         </Button>
+        
         <TextBlock Grid.Row="1" Style="{StaticResource SubtitleTextBlockStyle}" TextWrapping="Wrap" TextAlignment="Center"
                    Foreground="{DynamicResource SystemBaseHighColorBrush}"
                    Text="Backup logs">
