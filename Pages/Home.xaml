@@ -53,9 +53,10 @@
             <ListView x:Name="backupLogsListView" VerticalAlignment="Stretch" Padding="10">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn DisplayMemberBinding="{Binding date}" Header="Date &amp; time" Width="200"/>
-                        <GridViewColumn DisplayMemberBinding="{Binding filesBackedUp}" Header="Total files" Width="200"/>
-                        <GridViewColumn DisplayMemberBinding="{Binding timeTaken}" Header="Time taken" Width="200"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding id}" Header="S. No." Width="100"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding date}" Header="Date &amp; Time" Width="200"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding filesBackedUp}" Header="Total files" Width="150"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding timeTaken}" Header="Time taken" Width="150"/>
                     </GridView>
                 </ListView.View>
             </ListView>

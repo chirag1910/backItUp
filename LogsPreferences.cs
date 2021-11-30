@@ -12,5 +12,6 @@ namespace BackItUp
         public String date { get; set; }
         public String filesBackedUp { get; set; }
         public String timeTaken { get; set; }
+        public int id { get; set; }
     }
 }

@@ -62,14 +62,17 @@ namespace BackItUp.Pages
 
                     backupLogsListView.ItemsSource = listItems;
                     listItems.Clear();
+                    int reverse_counter = results.Count;
                     foreach (JToken result in results)
                     {
                         listItems.Add(new BackupLogResult()
                         {
                             date = result["date"].ToString(),
                             filesBackedUp = result["filesBackedUp"].ToString(),
-                            timeTaken = result["timeTaken"].ToString()
+                            timeTaken = result["timeTaken"].ToString(),
+                            id = reverse_counter
                         });
+                        reverse_counter--;
                     }
                 }
             }));
