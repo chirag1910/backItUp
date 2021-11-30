@@ -24,9 +24,10 @@
         </TextBlock>
         
         <Button Style="{StaticResource ButtonRoundRevealStyle}"
+                Name="clearListButton"
                         Height="35" Width="35" Padding="5"
                         Background="Transparent"
-                
+                   Visibility="Hidden"
                Grid.Row="0"
                 VerticalAlignment="Top"
                         HorizontalAlignment="Right" Margin="20" ToolTip="Clear List"

@@ -52,11 +52,13 @@ namespace BackItUp.Pages
                 {
                     backupLogs.Visibility = Visibility.Hidden;
                     noLogTitle.Visibility = Visibility.Visible;
+                    clearListButton.Visibility = Visibility.Hidden;
                 }
                 else
                 {
                     backupLogs.Visibility = Visibility.Visible;
                     noLogTitle.Visibility = Visibility.Hidden;
+                    clearListButton.Visibility = Visibility.Visible;
 
                     backupLogsListView.ItemsSource = listItems;
                     listItems.Clear();
@@ -94,6 +96,9 @@ namespace BackItUp.Pages
 
             String dataStringToWrite = JsonConvert.SerializeObject(logsPreferences);
             File.WriteAllText(log_file_path, dataStringToWrite);
+
+            var key = Registry.CurrentUser.CreateSubKey("Software\\BackItUp");
+            key.SetValue("NumberOfBackups", 0.ToString());
 
             loadBackUpLogs();
 
