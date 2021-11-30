@@ -354,7 +354,7 @@ namespace BackItUp
 
                 
                 var key = Registry.CurrentUser.CreateSubKey("Software\\BackItUp");
-                key.SetValue("NumberOfBackups", (logsPreferencesFileData.logs.Length + 1).ToString());
+                key.SetValue("NumberOfBackups", backupLogResult.date);
 
 
 
