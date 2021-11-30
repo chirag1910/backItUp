@@ -4,9 +4,11 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="icon.ico" />
     <None Remove="Images\addFile.png" />
     <None Remove="Images\addFolder.png" />
     <None Remove="Images\backup.png" />
@@ -33,6 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="icon.ico" />
     <Resource Include="Images\addFile.png" />
     <Resource Include="Images\addFolder.png" />
     <Resource Include="Images\backup.png" />
