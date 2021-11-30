@@ -6,6 +6,8 @@ using System.Windows.Forms;
 using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
+using System.Diagnostics;
+using Microsoft.Win32;
 
 namespace BackItUp
 {
@@ -18,11 +20,13 @@ namespace BackItUp
         private Zipper zipper;
         private Thread zipThread;
         private bool manuallyClose = false;
+        private bool pickListFromRegistry;
         private bool showZippingWindow;
-        public zippingWindow(bool showWindow)
+        public zippingWindow(bool showWindow, bool pickListFromRegistry = false)
         {
             InitializeComponent();
             showZippingWindow = showWindow;
+            this.pickListFromRegistry = pickListFromRegistry;
             this.Closing += (s, e) =>
             {
                 if (zipThread.IsAlive)
@@ -58,46 +62,70 @@ namespace BackItUp
             {
                 // getting files list
                 String dir_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BackItUp\\locals";
-                String log_file_path = dir_path + "\\fileListPreferences.json";
 
-                String dataString = File.ReadAllText(log_file_path);
-
-                JObject data = JObject.Parse(dataString);
-                var results = data["paths"].Children().ToList();
-                var stringResults = new string[results.Count];
-                int i = 0;
-                foreach (String result in results)
-                {
-                    stringResults[i] = result;
-                    i++;
-                }
-
-                // getting zip file name
                 String settings_file_path = dir_path + "\\settingsPreferences.json";
 
-                dataString = File.ReadAllText(settings_file_path);
-                SettingsPreferences settingsData = JsonConvert.DeserializeObject<SettingsPreferences>(dataString);;
+                String dataString = File.ReadAllText(settings_file_path);
+                SettingsPreferences settingsData = JsonConvert.DeserializeObject<SettingsPreferences>(dataString); ;
 
-                var zipPath = settingsData.saveLocation;
 
-                if (!zipPath.EndsWith("\\"))
+                if (!pickListFromRegistry)
                 {
-                    zipPath += "\\";
-                }
+                    String log_file_path = dir_path + "\\fileListPreferences.json";
 
-                zipPath += settingsData.saveAs + ".zip";
-                this.zipPath = zipPath;
-                zipper = new Zipper();
-                zipper.Zip(stringResults, settingsData.ignore, zipPath, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
-                Thread.Sleep(2000);
-                this.Dispatcher.Invoke(() =>
-                {
-                    if (!showZippingWindow)
+                    dataString = File.ReadAllText(log_file_path);
+
+                    JObject data = JObject.Parse(dataString);
+                    var results = data["paths"].Children().ToList();
+                    var stringResults = new string[results.Count];
+                    int i = 0;
+                    foreach (String result in results)
                     {
-                        manuallyClose = true;
-                        Environment.Exit(Environment.ExitCode);
+                        stringResults[i] = result;
+                        i++;
                     }
-                });
+
+                    // getting zip file name
+
+                    var zipPath = settingsData.saveLocation;
+
+                    if (!zipPath.EndsWith("\\"))
+                    {
+                        zipPath += "\\";
+                    }
+
+                    zipPath += settingsData.saveAs + ".zip";
+                    this.zipPath = zipPath;
+                    zipper = new Zipper();
+                    zipper.Zip(stringResults, settingsData.ignore, zipPath, settingsData.compressionLevel, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+                    Thread.Sleep(2000);
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        if (!showZippingWindow)
+                        {
+                            manuallyClose = true;
+                            Environment.Exit(Environment.ExitCode);
+                        }
+                    });
+                }
+                else
+                {
+
+                    var fileListKey = Registry.CurrentUser.CreateSubKey("Software\\BackItUp\\ZipCommand\\filelist");
+                    var zipPathKey = Registry.CurrentUser.CreateSubKey("Software\\BackItUp\\ZipCommand\\zipPath");
+
+                    zipPath = zipPathKey.GetValue("").ToString();
+                    var numberOfFiles = Int32.Parse(fileListKey.GetValue("", "0").ToString());
+                    var files = new string[numberOfFiles];
+                    for (int count = 0; count < numberOfFiles; count++)
+                    {
+                        files[count] = fileListKey.GetValue(count.ToString()).ToString();
+                    }
+                    //this.zipPath = zipPath;
+                    zipper = new Zipper();
+                    zipper.Zip(files, new string[0], zipPath, settingsData.compressionLevel, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+                    Registry.CurrentUser.DeleteSubKeyTree("Software\\BackItUp\\ZipCommand");
+                }
             }
             catch (Exception e)
             {
@@ -108,8 +136,8 @@ namespace BackItUp
         {
             progressStatus.Text = "Exiting";
             manuallyClose = true;
-
-            if (zipThread.IsAlive)
+            Trace.WriteLine(progressCancelButton.Content.ToString());
+            if (progressCancelButton.Content.ToString().Equals("Cancel"))
             {
                 new Thread(() =>
                 {

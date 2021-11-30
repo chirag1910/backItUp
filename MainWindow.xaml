@@ -6,6 +6,7 @@
         xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"
         xmlns:local="clr-namespace:BackItUp"
         mc:Ignorable="d"
+        Icon="icon.ico"
         Title="BackItUp" Height="450" Width="800"
         WindowState="Normal"
         NoiseOpacity="0"

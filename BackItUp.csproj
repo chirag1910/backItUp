@@ -4,17 +4,21 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="icon.ico" />
     <None Remove="Images\addFile.png" />
     <None Remove="Images\addFolder.png" />
     <None Remove="Images\backup.png" />
     <None Remove="Images\delete.png" />
     <None Remove="Images\edit.png" />
+    <None Remove="Images\folder.png" />
     <None Remove="Images\home.png" />
     <None Remove="Images\reset.png" />
     <None Remove="Images\settings.png" />
+    <None Remove="Images\sharefile.png" />
     <None Remove="Images\unzip.png" />
     <None Remove="Images\zip.png" />
     <None Remove="Images\zipFile.png" />
@@ -33,14 +37,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="icon.ico" />
     <Resource Include="Images\addFile.png" />
     <Resource Include="Images\addFolder.png" />
     <Resource Include="Images\backup.png" />
     <Resource Include="Images\delete.png" />
     <Resource Include="Images\edit.png" />
+    <Resource Include="Images\folder.png" />
     <Resource Include="Images\home.png" />
     <Resource Include="Images\reset.png" />
     <Resource Include="Images\settings.png" />
+    <Resource Include="Images\sharefile.png" />
     <Resource Include="Images\unzip.png" />
     <Resource Include="Images\zip.png" />
     <Resource Include="Images\zipFile.png" />

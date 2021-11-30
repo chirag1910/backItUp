@@ -9,5 +9,6 @@ namespace BackItUp
         public String saveAs { get; set; }
         public DateTime backupTime { get; set; }
         public String[] ignore { get; set; }
+        public Int32 compressionLevel { get; set; }
     }
 }

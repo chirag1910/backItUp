@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using System.Diagnostics;
 using System.Collections.ObjectModel;
 using System.Threading;
+using Microsoft.Win32;
 
 namespace BackItUp.Pages
 {
@@ -20,7 +21,13 @@ namespace BackItUp.Pages
         public Home()
         {
             InitializeComponent();
-
+            var listener = new RegistryUtils.RegistryMonitor(Registry.CurrentUser.CreateSubKey("Software\\BackItUp"));
+            listener.RegChanged += (_, __) =>
+            {
+                Thread thread = new Thread(new ThreadStart(loadBackUpLogs));
+                thread.Start();
+            };
+            listener.Start();
             try
             {
                 Thread thread = new Thread(new ThreadStart(loadBackUpLogs));

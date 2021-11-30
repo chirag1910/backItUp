@@ -23,6 +23,7 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions>
@@ -72,6 +73,25 @@
                          VerticalContentAlignment="Center"
                          IsReadOnly="True"
                          ToolTip="Full Path here"/>
+
+                <Button Style="{StaticResource ButtonRoundRevealStyle}"
+                        Height="35" Width="35" Padding="5"
+                        Background="Transparent"
+                        Name="openBackupFolderButton"
+                        HorizontalAlignment="Left" Margin="20 0 -10 0" ToolTip="Open Backup Folder"
+                        Click="openBackupFolder">
+                    <Grid>
+                        <Image Source="/Images/folder.png" VerticalAlignment="Center"></Image>
+                        <Rectangle>
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="{DynamicResource SystemBaseHighColor}"/>
+                            </Rectangle.Fill>
+                            <Rectangle.OpacityMask>
+                                <ImageBrush ImageSource="/Images/folder.png"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                    </Grid>
+                </Button>
                 <Button Style="{StaticResource ButtonRoundRevealStyle}"
                         Height="35" Width="35" Padding="5"
                         Background="Transparent"
@@ -103,6 +123,26 @@
                          Background="{DynamicResource SystemAltLowColorBrush}"
                          Foreground="{DynamicResource SystemBaseMediumHighColorBrush}"
                          VerticalContentAlignment="Center"/>
+
+
+                <Button Style="{StaticResource ButtonRoundRevealStyle}"
+                        Height="35" Width="35" Padding="5"
+                        Background="Transparent"
+                        Name="openBackupButton"
+                        HorizontalAlignment="Left" Margin="20 0 -10 0" ToolTip="Open Backup"
+                        Click="openBackup">
+                    <Grid>
+                        <Image Source="/Images/sharefile.png" VerticalAlignment="Center"></Image>
+                        <Rectangle>
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="{DynamicResource SystemBaseHighColor}"/>
+                            </Rectangle.Fill>
+                            <Rectangle.OpacityMask>
+                                <ImageBrush ImageSource="/Images/sharefile.png"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                    </Grid>
+                </Button>
                 <Button Style="{StaticResource ButtonRoundRevealStyle}"
                         Height="35" Width="35" Padding="5"
                         Background="Transparent"
@@ -172,6 +212,25 @@
                     </Grid>
                 </Button>
             </StackPanel>
+            <TextBlock Grid.Row="6" Grid.Column="0" Margin="20"
+                   Style="{StaticResource SubtitleTextBlockStyle}" 
+                   Foreground="{DynamicResource SystemBaseHighColorBrush}"
+                   Text="Compression Level"/>
+            <ComboBox
+                Grid.Row="6"
+                Grid.Column="1"
+                Margin="20"
+                                HorizontalContentAlignment="Left"
+                                Name="CompressionLevelSelector"
+                                Width="150"
+                                SelectedIndex="0">
+                <TextBlock Text="No Compression"/>
+                <TextBlock Text="Fastest Speed"/>
+                <TextBlock Text="Normal Compression"/>
+                <TextBlock Text="Best Compression"/>
+            </ComboBox>
+
+
 
         </Grid>
     </ScrollViewer>

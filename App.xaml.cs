@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using System.Windows;
+using ICSharpCode.SharpZipLib.Zip.Compression;
 
 namespace BackItUp
 {
@@ -46,7 +47,8 @@ namespace BackItUp
             else
             {
                 var showWindow = Boolean.Parse(arguments.GetValueOrDefault("showwindow", Boolean.TrueString));
-                var window = new zippingWindow(showWindow);
+                var pickFileFromRegistry = Boolean.Parse(arguments.GetValueOrDefault("pickFromReg", Boolean.FalseString));
+                var window = new zippingWindow(showWindow, pickFileFromRegistry);
                 if (showWindow)
                 {
                     window.Show();
@@ -74,6 +76,8 @@ namespace BackItUp
                 settingsPreferences.autoBackup = false;
                 settingsPreferences.saveLocation = dowloadPath;
                 settingsPreferences.saveAs = "BackItUp backup";
+
+                settingsPreferences.compressionLevel = Deflater.NO_COMPRESSION;
                 settingsPreferences.backupTime = new DateTime(2001, 1, 1, 0, 0, 0);
                 settingsPreferences.ignore = new String[0] { };
 

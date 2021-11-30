@@ -10,6 +10,7 @@ using System.IO;
 using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Microsoft.Win32;
 
 namespace BackItUp
 {
@@ -22,15 +23,20 @@ namespace BackItUp
         private string zipPath = "";
         private String prevZipPath = "";
         private bool cancelButtonClicked = false;
+        private int compressionLevel;
 
-        public void Zip(string[] paths, string[] ignores, string outputFilePath, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
+        public void Zip(string[] paths, string[] ignores, string outputFilePath, int compressionLevel, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
         {
             var listener = new ProgressListener(fileList, progressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
             listener.StartedCalculatingFiles();
             createTree(paths, ignores);
             zipPath = outputFilePath.Substring(0, outputFilePath.LastIndexOf("\\")+1) + ".~" + outputFilePath.Substring(outputFilePath.LastIndexOf("\\") + 1);
             prevZipPath = outputFilePath;
-
+            this.compressionLevel = compressionLevel;
+            if (File.Exists(zipPath))
+            {
+                File.Delete(zipPath);
+            }
             var newZipFile = File.Create(zipPath);
             File.SetAttributes(zipPath, File.GetAttributes(zipPath) | FileAttributes.Hidden);
             createZip(newZipFile, listener);
@@ -126,7 +132,7 @@ namespace BackItUp
             try
             {
                 zos = new ZipOutputStream(stream);
-                zos.SetLevel(Deflater.NO_COMPRESSION);
+                zos.SetLevel(compressionLevel);
                 FileStream input = null;
                 foreach (string file in fileList)
                 {
@@ -176,7 +182,7 @@ namespace BackItUp
                 if (fileList.Count > 0)
                     zos.CloseEntry();
 
-                listener.progressComplete(total, allFilesSize);
+                
             }
             catch (Exception e)
             {
@@ -201,6 +207,7 @@ namespace BackItUp
                 }
 
                 if (File.Exists(zipPath)) { File.Delete(zipPath); }
+                cancelFlag = true;
 
             }
             finally
@@ -233,6 +240,7 @@ namespace BackItUp
                     if (File.Exists(prevZipPath)) { File.Delete(prevZipPath); }
                     File.Move(zipPath, prevZipPath);
                     File.SetAttributes(prevZipPath, FileAttributes.Normal);
+                    listener.progressComplete(total, allFilesSize);
                 }
                 else
                 {
@@ -343,6 +351,12 @@ namespace BackItUp
                 // saving data in file
                 String dataStringToWrite = JsonConvert.SerializeObject(logsPreferences);
                 File.WriteAllText(log_file_path, dataStringToWrite);
+
+                
+                var key = Registry.CurrentUser.CreateSubKey("Software\\BackItUp");
+                key.SetValue("NumberOfBackups", (logsPreferencesFileData.logs.Length + 1).ToString());
+
+
 
             }
 

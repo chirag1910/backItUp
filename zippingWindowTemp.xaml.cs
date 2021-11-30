@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
+using System.IO;
 using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
@@ -52,8 +54,13 @@ namespace BackItUp
         {
             try
             {
+                String dir_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BackItUp\\locals";
+                String settings_file_path = dir_path + "\\settingsPreferences.json";
+                string dataString = File.ReadAllText(settings_file_path);
+                SettingsPreferences settingsData = JsonConvert.DeserializeObject<SettingsPreferences>(dataString);
+
                 zipper = new Zipper();
-                zipper.Zip(fileList, new string[0], zipPath, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+                zipper.Zip(fileList, new string[0], zipPath, settingsData.compressionLevel, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
             }
             catch (Exception e)
             {
@@ -65,7 +72,7 @@ namespace BackItUp
             progressStatus.Text = "Exiting";
             manuallyClose = true;
 
-            if (zipThread.IsAlive)
+            if (progressCancelButton.Content.ToString().Equals("Cancel"))
             {
                 new Thread(() =>
                 {

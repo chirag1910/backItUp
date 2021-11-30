@@ -8,6 +8,8 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32.TaskScheduler;
 using System.Threading;
+using ICSharpCode.SharpZipLib.Zip.Compression;
+using System.Diagnostics;
 
 namespace BackItUp.Pages
 {
@@ -31,6 +33,19 @@ namespace BackItUp.Pages
 
             String dataString = File.ReadAllText(settings_file_path);
             SettingsPreferences data = JsonConvert.DeserializeObject<SettingsPreferences>(dataString);
+            var zipPath = data.saveLocation;
+
+            if (!zipPath.EndsWith("\\"))
+            {
+                zipPath += "\\";
+            }
+
+            zipPath += data.saveAs + ".zip";
+
+            if (!File.Exists(zipPath))
+            {
+                openBackupButton.Visibility = Visibility.Collapsed;
+            }
 
             var zipFileDir = data.saveLocation.Substring(data.saveLocation.LastIndexOf("\\") + 1);
             savePathTextBox.Text = zipFileDir;
@@ -45,6 +60,21 @@ namespace BackItUp.Pages
             
 
             backupTimePicker.SelectedTime = selectedTime;
+            if (data.compressionLevel == Deflater.NO_COMPRESSION) {
+                CompressionLevelSelector.SelectedIndex = 0;
+            }
+            else if (data.compressionLevel == Deflater.BEST_SPEED)
+            {
+                CompressionLevelSelector.SelectedIndex = 1;
+            }
+            else if (data.compressionLevel == Deflater.DEFAULT_COMPRESSION)
+            {
+                CompressionLevelSelector.SelectedIndex = 2;
+            }
+            else if (data.compressionLevel == Deflater.BEST_COMPRESSION)
+            {
+                CompressionLevelSelector.SelectedIndex = 3;
+            }
 
 
             if (data.autoBackup)
@@ -84,6 +114,10 @@ namespace BackItUp.Pages
             {
                 saveSettings();
             };
+            CompressionLevelSelector.SelectionChanged += (_, __) =>
+            {
+                saveSettings();
+            };
         }
 
         // remove params and hard code the fing thinf
@@ -107,6 +141,23 @@ namespace BackItUp.Pages
             settingsPreferences.saveLocation = savePathTextBox.ToolTip.ToString();
             settingsPreferences.saveAs = saveAsTextBox.Text;
             settingsPreferences.backupTime = (DateTime)selectedTime;
+            if (CompressionLevelSelector.SelectedIndex == 0)
+            {
+                settingsPreferences.compressionLevel = Deflater.NO_COMPRESSION;
+            }
+            else if (CompressionLevelSelector.SelectedIndex == 1)
+            {
+                settingsPreferences.compressionLevel = Deflater.BEST_SPEED;
+            }
+            else if (CompressionLevelSelector.SelectedIndex == 2)
+            {
+                settingsPreferences.compressionLevel = Deflater.DEFAULT_COMPRESSION;
+            }
+            else if (CompressionLevelSelector.SelectedIndex == 3)
+            {
+                settingsPreferences.compressionLevel = Deflater.BEST_COMPRESSION;
+            }
+
             if (ignoreTextBox.Text.Trim().Length > 0)
             {
                 settingsPreferences.ignore = ignoreTextBox.Text.Split(',');
@@ -197,6 +248,45 @@ namespace BackItUp.Pages
         {
             ignoreTextBox.Text = "";
             saveSettings();
+        }
+        private void openBackupFolder(object sender, RoutedEventArgs e)
+        {
+            String dir_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BackItUp\\locals";
+            String settings_file_path = dir_path + "\\settingsPreferences.json";
+
+            String dataString = File.ReadAllText(settings_file_path);
+            SettingsPreferences settingsData = JsonConvert.DeserializeObject<SettingsPreferences>(dataString);
+            var zipPath = settingsData.saveLocation;
+
+            if (!zipPath.EndsWith("\\"))
+            {
+                zipPath += "\\";
+            }
+            Process.Start("explorer.exe", zipPath);
+        }
+        
+        private void openBackup(object sender, RoutedEventArgs e)
+        {
+            String dir_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BackItUp\\locals";
+            String settings_file_path = dir_path + "\\settingsPreferences.json";
+
+            String dataString = File.ReadAllText(settings_file_path);
+            SettingsPreferences settingsData = JsonConvert.DeserializeObject<SettingsPreferences>(dataString);
+            var zipPath = settingsData.saveLocation;
+
+            if (!zipPath.EndsWith("\\"))
+            {
+                zipPath += "\\";
+            }
+
+            zipPath += settingsData.saveAs + ".zip";
+            Process p = new Process();
+            ProcessStartInfo ps = new ProcessStartInfo();
+            ps.FileName = "CMD.exe";
+            ps.Arguments = "/C \"" + zipPath + "\"";
+            ps.CreateNoWindow = true;
+            p.StartInfo = ps;
+            p.Start();
         }
     }
 }
