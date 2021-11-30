@@ -140,7 +140,10 @@ namespace BackItUp
                     FileAttributes attr = File.GetAttributes(file);
                     if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
                     {
-                        ZipEntry ze = new ZipEntry(file.Replace(":\\", "\\"));
+                        var folderName = file.Replace(":\\", "\\");
+                        if (!folderName.EndsWith("\\"))
+                            folderName += "\\";
+                        ZipEntry ze = new ZipEntry(folderName);
                         ze.Size = 0;
                         zos.PutNextEntry(ze);
                     }
