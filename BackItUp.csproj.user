@@ -18,9 +18,6 @@
     <Compile Update="zippingWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="zippingWindowTemp.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="MainWindow.xaml">
@@ -51,9 +48,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="zippingWindow.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="zippingWindowTemp.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
