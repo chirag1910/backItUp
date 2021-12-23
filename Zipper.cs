@@ -27,9 +27,9 @@ namespace BackItUp
         private int compressionLevel;
         private Dictionary<string, string> pathAndRelativePath = new Dictionary<string, string>();
 
-        public void Zip(string[] paths, string[] ignores, string outputFilePath, int compressionLevel, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
+        public void Zip(string[] paths, string[] ignores, string outputFilePath, int compressionLevel, bool standAlone, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
         {
-            var listener = new ProgressListener(fileList, progressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+            var listener = new ProgressListener(fileList, standAlone, progressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
             listener.StartedCalculatingFiles();
             createTree(paths, ignores);
 
@@ -303,9 +303,10 @@ namespace BackItUp
             private Int64 totalFiles = 0;
             private List<string> allFiles;
             private NotificationManager notificationManager;
+            private bool standAlone = false;
 
 
-            public ProgressListener(List<string> fileList, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
+            public ProgressListener(List<string> fileList, bool standAlone, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
             {
                 this.progressBar = progressBar;
                 this.progressStatus = progressStatus;
@@ -314,6 +315,7 @@ namespace BackItUp
                 this.progressCancelButton = progressCancelButton;
                 this.filesDone = filesDone;
                 this.allFiles = fileList;
+                this.standAlone = standAlone;
                 notificationManager = new NotificationManager();
             }
 
@@ -361,41 +363,43 @@ namespace BackItUp
 
                 // adding to backup logs
 
-                // setting up new 
-                BackupLogResult backupLogResult = new BackupLogResult();
-
-                backupLogResult.date = DateTime.Now.ToString();
-                backupLogResult.filesBackedUp = totalFiles.ToString();
-                backupLogResult.timeTaken = stopwatch.Elapsed.Minutes.ToString() + " : " + (stopwatch.Elapsed.Seconds % 60).ToString();
-
-
-                // reading prev data
-                String dir_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BackItUp\\locals";
-                String log_file_path = dir_path + "\\logsPreferences.json";
-                String dataString = File.ReadAllText(log_file_path);
-                LogsPreferences logsPreferencesFileData = JsonConvert.DeserializeObject<LogsPreferences>(dataString);
-
-                // adding new data
-                LogsPreferences logsPreferences = new LogsPreferences() { 
-                    logs = new BackupLogResult[logsPreferencesFileData.logs.Length + 1]
-                };
-
-                logsPreferences.logs[0] = backupLogResult;
-                for(int i = 0; i < logsPreferencesFileData.logs.Length; i++)
+                if (!standAlone)
                 {
-                    logsPreferences.logs[i + 1] = logsPreferencesFileData.logs[i];
+                    // setting up new 
+                    BackupLogResult backupLogResult = new BackupLogResult();
+
+                    backupLogResult.date = DateTime.Now.ToString();
+                    backupLogResult.filesBackedUp = totalFiles.ToString();
+                    backupLogResult.timeTaken = stopwatch.Elapsed.Minutes.ToString() + " : " + (stopwatch.Elapsed.Seconds % 60).ToString();
+
+
+                    // reading prev data
+                    String dir_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BackItUp\\locals";
+                    String log_file_path = dir_path + "\\logsPreferences.json";
+                    String dataString = File.ReadAllText(log_file_path);
+                    LogsPreferences logsPreferencesFileData = JsonConvert.DeserializeObject<LogsPreferences>(dataString);
+
+                    // adding new data
+                    LogsPreferences logsPreferences = new LogsPreferences()
+                    {
+                        logs = new BackupLogResult[logsPreferencesFileData.logs.Length + 1]
+                    };
+
+                    logsPreferences.logs[0] = backupLogResult;
+                    for (int i = 0; i < logsPreferencesFileData.logs.Length; i++)
+                    {
+                        logsPreferences.logs[i + 1] = logsPreferencesFileData.logs[i];
+                    }
+
+                    // saving data in file
+                    String dataStringToWrite = JsonConvert.SerializeObject(logsPreferences);
+                    File.WriteAllText(log_file_path, dataStringToWrite);
+
+
+                    var key = Registry.CurrentUser.CreateSubKey("Software\\BackItUp");
+                    key.SetValue("NumberOfBackups", backupLogResult.date);
                 }
-
-                // saving data in file
-                String dataStringToWrite = JsonConvert.SerializeObject(logsPreferences);
-                File.WriteAllText(log_file_path, dataStringToWrite);
-
                 
-                var key = Registry.CurrentUser.CreateSubKey("Software\\BackItUp");
-                key.SetValue("NumberOfBackups", backupLogResult.date);
-
-
-
             }
 
             internal void progressUpdate(long total, Int64 totalSize)
