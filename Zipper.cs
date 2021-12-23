@@ -33,15 +33,6 @@ namespace BackItUp
             listener.StartedCalculatingFiles();
             createTree(paths, ignores);
 
-            var path = @"C:\Users\saksham\Documents\Backituplog";
-            Directory.CreateDirectory(path);
-            var fs = File.Create(path + "\\log.txt");
-            foreach (var d in pathAndRelativePath)
-            {
-                var str = d.Key + ":" + d.Value + "\n";
-                fs.Write(Encoding.ASCII.GetBytes(str));
-            }
-            fs.Close();
             zipPath = outputFilePath.Substring(0, outputFilePath.LastIndexOf("\\")+1) + ".~" + outputFilePath.Substring(outputFilePath.LastIndexOf("\\") + 1);
             prevZipPath = outputFilePath;
             this.compressionLevel = compressionLevel;
