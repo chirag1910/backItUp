@@ -334,7 +334,7 @@ namespace BackItUp
                 notificationManager.Show(new NotificationContent
                 {
                     Title = Assembly.GetExecutingAssembly().GetName().Name,
-                    Message = "Backup Failed",
+                    Message = !standAlone ? "Backup Failed" : "Zipping Failed",
                     Type = NotificationType.Error
                 });
             }
@@ -357,7 +357,7 @@ namespace BackItUp
                 notificationManager.Show(new NotificationContent
                 {
                     Title = Assembly.GetExecutingAssembly().GetName().Name,
-                    Message = "Backup Completed",
+                    Message = !standAlone ? "Backup Completed" : "Zipping Completed",
                     Type = NotificationType.Success
                 });
 
@@ -431,7 +431,7 @@ namespace BackItUp
                 notificationManager.Show(new NotificationContent
                 {
                     Title = Assembly.GetExecutingAssembly().GetName().Name,
-                    Message = "Backup Started",
+                    Message = !standAlone ? "Backup Started" : "Zipping Started",
                     Type = NotificationType.Information
                 });
 
