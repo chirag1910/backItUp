@@ -35,7 +35,7 @@ namespace BackItUp
                     e.Cancel = !manuallyClose;
                     this.Hide();
 
-
+                    showZippingWindow = false;
                     NotifyIcon icon = new NotifyIcon();
                     icon.Visible = !manuallyClose;
                     icon.Icon = System.Drawing.Icon.ExtractAssociatedIcon(System.Reflection.Assembly.GetEntryAssembly().ManifestModule.Name);

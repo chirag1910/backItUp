@@ -11,6 +11,7 @@ using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Microsoft.Win32;
+using System.Text;
 
 namespace BackItUp
 {
@@ -24,12 +25,23 @@ namespace BackItUp
         private String prevZipPath = "";
         private bool cancelButtonClicked = false;
         private int compressionLevel;
+        private Dictionary<string, string> pathAndRelativePath = new Dictionary<string, string>();
 
         public void Zip(string[] paths, string[] ignores, string outputFilePath, int compressionLevel, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
         {
             var listener = new ProgressListener(fileList, progressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
             listener.StartedCalculatingFiles();
             createTree(paths, ignores);
+
+            var path = @"C:\Users\saksham\Documents\Backituplog";
+            Directory.CreateDirectory(path);
+            var fs = File.Create(path + "\\log.txt");
+            foreach (var d in pathAndRelativePath)
+            {
+                var str = d.Key + ":" + d.Value + "\n";
+                fs.Write(Encoding.ASCII.GetBytes(str));
+            }
+            fs.Close();
             zipPath = outputFilePath.Substring(0, outputFilePath.LastIndexOf("\\")+1) + ".~" + outputFilePath.Substring(outputFilePath.LastIndexOf("\\") + 1);
             prevZipPath = outputFilePath;
             this.compressionLevel = compressionLevel;
@@ -77,7 +89,7 @@ namespace BackItUp
             return false;
         }
 
-        private void createTree(string[] paths, string[] ignores)
+        private void createTree(string[] paths, string[] ignores, string s = "")
         {
             foreach(String path in paths)
             {
@@ -96,20 +108,48 @@ namespace BackItUp
 
                             if (dirs.Length == 0 && files.Length == 0)
                             {
-                                fileList.Add(path);
+                                if (s != "")
+                                {
+                                    fileList.Add(path);
+                                    pathAndRelativePath.Add(path, s);
+                                }
+                                else
+                                {
+                                    fileList.Add(path);
+                                    pathAndRelativePath.Add(path, path.Substring(0, path.LastIndexOf("\\")));
+                                }
                             }
                             else
                             {
-                                createTree(dirs, ignores);
-                                createTree(files, ignores);
+                                if (s == "") { 
+                                createTree(dirs, ignores, path.Substring(0, path.LastIndexOf("\\")));
+                                createTree(files, ignores, path.Substring(0, path.LastIndexOf("\\")));
+                                }
+                                else
+                                {
+                                createTree(dirs, ignores, s);
+                                createTree(files, ignores, s);
+
+                                }
                             }
                         }
                         else
                         {
                             if (!isInArray(Path.GetExtension(path), ignores))
                             {
-                                fileList.Add(path);
-                                allFilesSize += new FileInfo(path).Length;
+                                if (s != "")
+                                {
+                                    fileList.Add(path);
+                                    pathAndRelativePath.Add(path, s);
+                                    allFilesSize += new FileInfo(path).Length;
+                                }
+                                else
+                                {
+                                    fileList.Add(path);
+                                    pathAndRelativePath.Add(path, path.Substring(0, path.LastIndexOf("\\")));
+                                    allFilesSize += new FileInfo(path).Length;
+
+                                }
                             }
                         }
                     }
@@ -140,7 +180,9 @@ namespace BackItUp
                     FileAttributes attr = File.GetAttributes(file);
                     if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
                     {
-                        var folderName = file.Replace(":\\", "\\");
+                        string givenPath = "";
+                        pathAndRelativePath.TryGetValue(file, out givenPath);
+                        var folderName = file.Replace(givenPath, "");
                         if (!folderName.EndsWith("\\"))
                             folderName += "\\";
                         ZipEntry ze = new ZipEntry(folderName);
@@ -149,7 +191,9 @@ namespace BackItUp
                     }
                     else
                     {
-                        ZipEntry ze = new ZipEntry(file.Replace(":\\", "\\"));
+                        string givenPath = "";
+                        pathAndRelativePath.TryGetValue(file, out givenPath);
+                        ZipEntry ze = new ZipEntry(file.Replace(givenPath, ""));
 
                         ze.Size = new FileInfo(file).Length;
                         zos.PutNextEntry(ze);
