@@ -57,8 +57,6 @@ namespace BackItUp
                             listener.progressUpdate(sizeUnzipped, zipFileSize);
                         }
                     }
-
-                    stream.Close();
                 }
                 listener.progressComplete();
             }
