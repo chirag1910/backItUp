@@ -53,4 +53,8 @@
     <Resource Include="Images\zipFile.png" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
 </Project>
