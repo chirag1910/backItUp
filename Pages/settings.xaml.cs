@@ -184,7 +184,7 @@ namespace BackItUp.Pages
                 td.Settings.StartWhenAvailable = true;
 
                 //run this application or setup path to the file
-                td.Actions.Add(new ExecAction((AppDomain.CurrentDomain.BaseDirectory + AppDomain.CurrentDomain.FriendlyName), "--startzip 1 --showwindow false", null));
+                td.Actions.Add(new ExecAction((Process.GetCurrentProcess().MainModule.FileName), "--startzip 1 --showwindow false", null));
 
                 ts.RootFolder.RegisterTaskDefinition("BackItUp", td);
             }).Start();

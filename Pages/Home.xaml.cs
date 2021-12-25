@@ -80,7 +80,7 @@ namespace BackItUp.Pages
 
         private void backupNowButton(object sender, RoutedEventArgs e)
         {
-            String applicationPath = AppDomain.CurrentDomain.BaseDirectory + AppDomain.CurrentDomain.FriendlyName;
+            String applicationPath = Process.GetCurrentProcess().MainModule.FileName;
             var info = new ProcessStartInfo();
             info.CreateNoWindow = false;
             info.UseShellExecute = true;
