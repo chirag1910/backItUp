@@ -5,6 +5,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Windows;
 using ICSharpCode.SharpZipLib.Zip.Compression;
+using BackItUp.Pages;
 
 namespace BackItUp
 {
@@ -39,6 +40,7 @@ namespace BackItUp
             }
 
             initializeStaticFile();
+            setupAutoBackupTask();
             if (!arguments.ContainsKey("startzip"))
             {
                 MainWindow mainWindow = new MainWindow();
@@ -53,6 +55,24 @@ namespace BackItUp
                 {
                     window.Show();
                 }
+            }
+        }
+
+        private void setupAutoBackupTask()
+        {
+            String dir_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BackItUp\\locals";
+            String settings_file_path = dir_path + "\\settingsPreferences.json";
+
+            String dataString = File.ReadAllText(settings_file_path);
+            SettingsPreferences data = JsonConvert.DeserializeObject<SettingsPreferences>(dataString);
+
+            if (data.autoBackup)
+            {
+                settings.turnOnAutoBackup(data.backupTime);
+            }
+            else
+            {
+                settings.turnOffAutoBackup();
             }
         }
 

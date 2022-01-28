@@ -171,7 +171,7 @@ namespace BackItUp.Pages
             File.WriteAllText(settings_file_path, dataStringToWrite);
         }
 
-        private void turnOnAutoBackup(DateTime dateTime)
+        public static void turnOnAutoBackup(DateTime dateTime)
         {
             new Thread(() => {
                 var ts = new TaskService();
@@ -191,7 +191,7 @@ namespace BackItUp.Pages
             
 
         }
-        private void turnOffAutoBackup()
+        public static void turnOffAutoBackup()
         {
             new Thread(() => {
                 try{
