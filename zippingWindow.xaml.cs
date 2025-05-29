@@ -1,13 +1,14 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Microsoft.Win32;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Diagnostics;
 using System.IO;
-using System.Windows;
-using System.Windows.Forms;
 using System.Linq;
 using System.Threading;
-using Newtonsoft.Json;
-using System.Diagnostics;
-using Microsoft.Win32;
+using System.Windows;
+using System.Windows.Forms;
+using System.Windows.Markup;
 
 namespace BackItUp
 {
@@ -69,6 +70,8 @@ namespace BackItUp
                 SettingsPreferences settingsData = JsonConvert.DeserializeObject<SettingsPreferences>(dataString); ;
 
 
+                settingsData.threads = settingsData.threads > 0 && settingsData.threads < 65 ? settingsData.threads : 1;
+                settingsData.cacheSize = settingsData.cacheSize > 0 && settingsData.cacheSize < 11 ? settingsData.cacheSize : 1;
                 if (!pickListFromRegistry)
                 {
                     String log_file_path = dir_path + "\\fileListPreferences.json";
@@ -97,7 +100,7 @@ namespace BackItUp
                     zipPath += settingsData.saveAs + ".zip";
                     this.zipPath = zipPath;
                     zipper = new Zipper();
-                    zipper.Zip(stringResults, settingsData.ignore, zipPath, settingsData.compressionLevel, false, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+                    zipper.Zip(stringResults, settingsData.ignore, zipPath, settingsData.compressionLevel, settingsData.caching, settingsData.threads, settingsData.cacheSize, false, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
                     Thread.Sleep(2000);
                     this.Dispatcher.Invoke(() =>
                     {
@@ -123,7 +126,7 @@ namespace BackItUp
                     }
                     //this.zipPath = zipPath;
                     zipper = new Zipper();
-                    zipper.Zip(files, new string[0], zipPath, settingsData.compressionLevel, true, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+                    zipper.Zip(files, new string[0], zipPath, settingsData.compressionLevel, settingsData.caching, settingsData.threads, settingsData.cacheSize, true, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
                     Registry.CurrentUser.DeleteSubKeyTree("Software\\BackItUp\\ZipCommand");
                 }
             }

@@ -21,9 +21,10 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions>
@@ -230,6 +231,129 @@
                 <TextBlock Text="Best Compression"/>
             </ComboBox>
 
+
+            <TextBlock Grid.Row="7" Grid.Column="0" Margin="20"
+       Style="{StaticResource SubtitleTextBlockStyle}" 
+       Foreground="{DynamicResource SystemBaseHighColorBrush}"
+       Text="Caching"/>
+            <StackPanel Grid.Row="7" Grid.Column="1" Margin="20" HorizontalAlignment="Left" Orientation="Vertical">
+                <ui:RadioButtons
+        Name="cachingRB"
+        SelectedIndex="0">
+                    <RadioButton>
+                        On
+                    </RadioButton>
+                    <RadioButton>
+                        Off
+                    </RadioButton>
+                </ui:RadioButtons>
+
+
+            </StackPanel>
+
+
+
+            <TextBlock Grid.Row="8" Grid.Column="0" Margin="20"
+       Style="{StaticResource SubtitleTextBlockStyle}" 
+       Foreground="{DynamicResource SystemBaseHighColorBrush}"
+       Text="Threads"/>
+            <ComboBox
+    Grid.Row="8"
+    Grid.Column="1"
+    Margin="20"
+                    HorizontalContentAlignment="Left"
+                    Name="cachingThreadsSelector"
+                    Width="150"
+                    SelectedIndex="0">
+                <TextBlock Text="1"/>
+                <TextBlock Text="2"/>
+                <TextBlock Text="3"/>
+                <TextBlock Text="4"/>
+                <TextBlock Text="5"/>
+                <TextBlock Text="6"/>
+                <TextBlock Text="7"/>
+                <TextBlock Text="8"/>
+                <TextBlock Text="9"/>
+                <TextBlock Text="10"/>
+                <TextBlock Text="11"/>
+                <TextBlock Text="12"/>
+                <TextBlock Text="13"/>
+                <TextBlock Text="14"/>
+                <TextBlock Text="15"/>
+                <TextBlock Text="16"/>
+                <TextBlock Text="17"/>
+                <TextBlock Text="18"/>
+                <TextBlock Text="19"/>
+                <TextBlock Text="20"/>
+                <TextBlock Text="21"/>
+                <TextBlock Text="22"/>
+                <TextBlock Text="23"/>
+                <TextBlock Text="24"/>
+                <TextBlock Text="25"/>
+                <TextBlock Text="26"/>
+                <TextBlock Text="27"/>
+                <TextBlock Text="28"/>
+                <TextBlock Text="29"/>
+                <TextBlock Text="30"/>
+                <TextBlock Text="31"/>
+                <TextBlock Text="32"/>
+                <TextBlock Text="33"/>
+                <TextBlock Text="34"/>
+                <TextBlock Text="35"/>
+                <TextBlock Text="36"/>
+                <TextBlock Text="37"/>
+                <TextBlock Text="38"/>
+                <TextBlock Text="39"/>
+                <TextBlock Text="40"/>
+                <TextBlock Text="41"/>
+                <TextBlock Text="42"/>
+                <TextBlock Text="43"/>
+                <TextBlock Text="44"/>
+                <TextBlock Text="45"/>
+                <TextBlock Text="46"/>
+                <TextBlock Text="47"/>
+                <TextBlock Text="48"/>
+                <TextBlock Text="49"/>
+                <TextBlock Text="50"/>
+                <TextBlock Text="51"/>
+                <TextBlock Text="52"/>
+                <TextBlock Text="53"/>
+                <TextBlock Text="54"/>
+                <TextBlock Text="55"/>
+                <TextBlock Text="56"/>
+                <TextBlock Text="57"/>
+                <TextBlock Text="58"/>
+                <TextBlock Text="59"/>
+                <TextBlock Text="60"/>
+                <TextBlock Text="61"/>
+                <TextBlock Text="62"/>
+                <TextBlock Text="63"/>
+                <TextBlock Text="64"/>
+
+            </ComboBox>
+            <TextBlock Grid.Row="9" Grid.Column="0" Margin="20"
+       Style="{StaticResource SubtitleTextBlockStyle}" 
+       Foreground="{DynamicResource SystemBaseHighColorBrush}"
+       Text="Cache Size"/>
+            <ComboBox
+    Grid.Row="9"
+    Grid.Column="1"
+    Margin="20"
+                    HorizontalContentAlignment="Left"
+                    Name="cacheSizeSelector"
+                    Width="150"
+                    SelectedIndex="0">
+                <TextBlock Text="1 GB"/>
+                <TextBlock Text="2 GB"/>
+                <TextBlock Text="3 GB"/>
+                <TextBlock Text="4 GB"/>
+                <TextBlock Text="5 GB"/>
+                <TextBlock Text="6 GB"/>
+                <TextBlock Text="7 GB"/>
+                <TextBlock Text="8 GB"/>
+                <TextBlock Text="9 GB"/>
+                <TextBlock Text="10 GB"/>
+            </ComboBox>
 
 
         </Grid>

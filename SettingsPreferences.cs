@@ -10,5 +10,8 @@ namespace BackItUp
         public DateTime backupTime { get; set; }
         public String[] ignore { get; set; }
         public Int32 compressionLevel { get; set; }
+        public Boolean caching  { get; set; }
+        public Int32 threads { get; set; }
+        public Int32 cacheSize { get; set; }
     }
 }

@@ -24,6 +24,7 @@ namespace BackItUp.Pages
             InitializeComponent();
             
             loadSettings();
+            setupListeners();
         }
 
         private void loadSettings()
@@ -88,6 +89,13 @@ namespace BackItUp.Pages
                 turnOffAutoBackup();
             }
 
+            cachingRB.SelectedIndex = data.caching ? 0 : 1;
+            cachingThreadsSelector.SelectedIndex = data.threads > 0 && data.threads < 65 ? data.threads - 1 : 0;
+            cacheSizeSelector.SelectedIndex = data.cacheSize > 0 && data.cacheSize < 11 ? data.cacheSize - 1 : 0;
+            cachingThreadsSelector.Opacity = data.caching ? 1 : 0.5;
+            cachingThreadsSelector.IsEnabled = data.caching ? true : false;
+            cacheSizeSelector.Opacity = data.caching ? 1 : 0.5;
+            cacheSizeSelector.IsEnabled = data.caching ? true : false;
             // ignores
             String ignoreString = "";
             String[] ignoreArray = data.ignore != null ? data.ignore : new string[0] { };
@@ -97,7 +105,6 @@ namespace BackItUp.Pages
             }
             ignoreTextBox.Text = ignoreString;
 
-            setupListeners();
         }
 
         private void setupListeners()
@@ -105,18 +112,38 @@ namespace BackItUp.Pages
             automaticBackupRB.SelectionChanged += (_, __) =>
             {
                 saveSettings();
+                loadSettings();
             };
             saveAsTextBox.TextChanged += (_, __) =>
             {
                 saveSettings();
+                loadSettings();
             };
             ignoreTextBox.TextChanged += (_, __) =>
             {
                 saveSettings();
+                loadSettings();
             };
             CompressionLevelSelector.SelectionChanged += (_, __) =>
             {
                 saveSettings();
+                loadSettings();
+            };
+            cachingRB.SelectionChanged += (_, __) =>
+            {
+                saveSettings();
+                loadSettings();
+            };
+
+            cachingThreadsSelector.SelectionChanged += (_, __) =>
+            {
+                saveSettings();
+                loadSettings();
+            };
+            cacheSizeSelector.SelectionChanged += (_, __) =>
+            {
+                saveSettings();
+                loadSettings();
             };
         }
 
@@ -166,7 +193,13 @@ namespace BackItUp.Pages
             {
                 settingsPreferences.ignore = new String[0];
             }
-
+            if (cachingRB.SelectedIndex == 0)
+            {
+                settingsPreferences.caching = true;
+            }
+            else { settingsPreferences.caching = false; }
+            settingsPreferences.threads = cachingThreadsSelector.SelectedIndex + 1;
+            settingsPreferences.cacheSize = cacheSizeSelector.SelectedIndex + 1;
             String dataStringToWrite = JsonConvert.SerializeObject(settingsPreferences);
             File.WriteAllText(settings_file_path, dataStringToWrite);
         }
