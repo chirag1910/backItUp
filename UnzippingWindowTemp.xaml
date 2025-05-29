@@ -1,17 +1,17 @@
-﻿<fw:AcrylicWindow x:Class="BackItUp.UnzippingWindowTemp"
+﻿<controls:MicaWindow x:Class="BackItUp.UnzippingWindowTemp"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:BackItUp"
+      
+        xmlns:controls="clr-namespace:MicaWPF.Controls;assembly=MicaWPF"
       mc:Ignorable="d" 
       xmlns:fw="clr-namespace:SourceChord.FluentWPF;assembly=FluentWPF"          
-      Height="200"
-      Width="675"
+      Height="300"
+      Width="700"
       ResizeMode="NoResize"
-      ExtendViewIntoTitleBar="True"
-      WindowState="Normal"
-      Title="Unzipping">
+      WindowState="Normal">
 
     <Grid fw:PointerTracker.Enabled="True">
         <Grid.RowDefinitions>
@@ -58,4 +58,4 @@
                    x:Name="progressValue">
         </TextBlock>
     </Grid>
-</fw:AcrylicWindow>
+</controls:MicaWindow>

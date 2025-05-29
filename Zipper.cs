@@ -12,12 +12,15 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Microsoft.Win32;
 using System.Text;
+using System.Linq;
+using System.Collections;
+using System.Collections.Concurrent;
 
 namespace BackItUp
 {
     class Zipper
     {
-
+        private FilesHolder filesHolder;
         private List<String> fileList = new List<String>();
         private Int64 allFilesSize = 0;
         private bool cancelFlag = false;
@@ -29,10 +32,11 @@ namespace BackItUp
 
         public void Zip(string[] paths, string[] ignores, string outputFilePath, int compressionLevel, bool standAlone, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
         {
+            filesHolder = new FilesHolder();
             var listener = new ProgressListener(fileList, standAlone, progressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
             listener.StartedCalculatingFiles();
             createTree(paths, ignores);
-
+            filesHolder.startReading();
             zipPath = outputFilePath.Substring(0, outputFilePath.LastIndexOf("\\")+1) + ".~" + outputFilePath.Substring(outputFilePath.LastIndexOf("\\") + 1);
             prevZipPath = outputFilePath;
             this.compressionLevel = compressionLevel;
@@ -130,15 +134,23 @@ namespace BackItUp
                             {
                                 if (s != "")
                                 {
+
                                     fileList.Add(path);
                                     pathAndRelativePath.Add(path, s);
-                                    allFilesSize += new FileInfo(path).Length;
+                                    long fileLen = new FileInfo(path).Length;
+                                    allFilesSize += fileLen;
+                                    if (fileLen < 50 * 1024 * 1024)                          //cache files with size less than 10mb
+                                        filesHolder.addToHolder(path, fileLen);
+                                    
                                 }
                                 else
                                 {
                                     fileList.Add(path);
                                     pathAndRelativePath.Add(path, path.Substring(0, path.LastIndexOf("\\")));
-                                    allFilesSize += new FileInfo(path).Length;
+                                    long fileLen = new FileInfo(path).Length;
+                                    allFilesSize += fileLen;
+                                    if (fileLen < 50 * 1024 * 1024)
+                                        filesHolder.addToHolder(path, fileLen);
 
                                 }
                             }
@@ -156,7 +168,7 @@ namespace BackItUp
         {
             long total = 0;
             
-            byte[] buffer = new byte[81920];
+            byte[] buffer = new byte[1 * 1024 * 1024];
             ZipOutputStream zos = null;
 
             listener.Started();
@@ -167,53 +179,79 @@ namespace BackItUp
                 FileStream input = null;
                 foreach (string file in fileList)
                 {
-                    listener.changeFileName(file);
-                    FileAttributes attr = File.GetAttributes(file);
-                    if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
+                    if (cancelFlag)
                     {
-                        string givenPath = "";
-                        pathAndRelativePath.TryGetValue(file, out givenPath);
-                        var folderName = file.Replace(givenPath, "");
-                        if (!folderName.EndsWith("\\"))
-                            folderName += "\\";
-                        ZipEntry ze = new ZipEntry(folderName);
-                        ze.Size = 0;
-                        zos.PutNextEntry(ze);
+                        break;
                     }
-                    else
+                    listener.changeFileName(file);
+                    if (filesHolder.isInHolder(file))
                     {
                         string givenPath = "";
                         pathAndRelativePath.TryGetValue(file, out givenPath);
                         ZipEntry ze = new ZipEntry(file.Replace(givenPath, ""));
-
-                        ze.Size = new FileInfo(file).Length;
+                        ze.Size = filesHolder.getFileLength(file);
+                        //ze.Size = new FileInfo(file).Length;
                         zos.PutNextEntry(ze);
-                        try
-                        {
-                            input = File.OpenRead(file);
+                        zos.Write(filesHolder.getFileData(file));
+                        total += filesHolder.getFileLength(file);
 
-                            int len;
-                            while ((len = input.Read(buffer, 0, buffer.Length)) > 0)
+                        listener.progressUpdate(total, allFilesSize);
+                        if (cancelFlag)
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        FileAttributes attr = File.GetAttributes(file);
+                        if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
+                        {
+                            string givenPath = "";
+                            pathAndRelativePath.TryGetValue(file, out givenPath);
+                            var folderName = file.Replace(givenPath, "");
+                            if (!folderName.EndsWith("\\"))
+                                folderName += "\\";
+                            ZipEntry ze = new ZipEntry(folderName);
+                            ze.Size = 0;
+                            zos.PutNextEntry(ze);
+                        }
+                        else
+                        {
+                            //listener.Failed(new Exception());
+                            string givenPath = "";
+                            pathAndRelativePath.TryGetValue(file, out givenPath);
+                            try
                             {
-                                if (!cancelFlag)
+                                ZipEntry ze = new ZipEntry(file.Replace(givenPath, ""));
+
+                            ze.Size = new FileInfo(file).Length;
+                            zos.PutNextEntry(ze);
+                            
+                                input = File.OpenRead(file);
+
+                                int len;
+                                while ((len = input.Read(buffer, 0, buffer.Length)) > 0)
                                 {
-                                    zos.Write(buffer, 0, len);
-                                    total += len;
-                                    listener.progressUpdate(total, allFilesSize);
+                                    if (!cancelFlag)
+                                    {
+                                        zos.Write(buffer, 0, len);
+                                        total += len;
+                                        listener.progressUpdate(total, allFilesSize);
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
                                 }
-                                else
+                                if (cancelFlag)
                                 {
                                     break;
                                 }
                             }
-                            if (cancelFlag)
+                            finally
                             {
-                                break;
+                                input.Close();
                             }
-                        }
-                        finally
-                        {
-                            input.Close();
                         }
                     }
                 }
@@ -263,6 +301,7 @@ namespace BackItUp
 
                 }
             }
+            filesHolder.cancelAndClearAll();
             if (cancelFlag)
             {
                 stream.Close();
@@ -291,6 +330,138 @@ namespace BackItUp
 
         }
 
+        public class FilesHolder
+        {
+            private ConcurrentDictionary<int, string> filePaths;
+            private ConcurrentBag<int> isLoaded;
+            private ConcurrentDictionary<int, long> fileSizes;
+            private ConcurrentDictionary<int, byte[]> data;
+            private List<Thread> t;
+            private int currWriting = 0;
+            private int threadsCount = 8;
+            private int fileCount = 0;
+            private List<string> filePathsIndexes;
+            private long avgFileSize = 0;
+            private long totalSize = 0;
+            private long maxCache = 10l * 1024l * 1024l * 1024l;
+            public FilesHolder()
+            {
+                filePaths = new ConcurrentDictionary<int,string>();
+                isLoaded = new ConcurrentBag<int>();
+                data = new ConcurrentDictionary<int, byte[]>();
+                fileSizes = new ConcurrentDictionary<int, long>();
+                t = new List<Thread>();
+                filePathsIndexes = new List<string>();
+            }
+            private int getIndex(string path)
+            {
+                try
+                {
+                    
+                    return filePaths[filePathsIndexes.IndexOf(path)].Equals(path)?filePathsIndexes.IndexOf(path) : -1;
+                }
+                catch { return -1; }
+            }
+            public void cancelAndClearAll()
+            {
+
+                foreach (Thread tr in t)
+                {
+                    try { tr.Abort(); } catch { }
+                }
+                t.Clear();
+                data.Clear();
+                filePaths.Clear();
+                isLoaded.Clear();
+                fileSizes.Clear();
+
+            }
+            public void addToHolder(string filePath, long fileLength)
+            {
+                FileAttributes attr = File.GetAttributes(filePath);
+                if ((attr & FileAttributes.Directory) != FileAttributes.Directory)
+                {
+                    filePaths.TryAdd(fileCount, filePath);
+                    fileSizes.TryAdd(fileCount, fileLength);
+                    data.TryAdd(fileCount, new byte[0]);
+                    filePathsIndexes.Add(filePath);
+                    fileCount++;
+                    totalSize += fileLength;
+                    avgFileSize = totalSize / fileCount;
+                }
+            }
+            public bool isInHolder(string filePath)
+            {
+                return getIndex(filePath) != -1 ;
+            }
+            public void startReading ()
+            {
+                long numberOfFileToCache = maxCache / avgFileSize;
+
+                for (int i = 0; i < threadsCount; i++)
+                {
+                    int j = i;
+                    t.Add(new Thread(() =>
+                    {
+                        int n = 0;
+                        foreach (var fp in filePaths)
+
+                        {
+                            try
+                            {
+                                int ind = fp.Key;
+                                while (ind - currWriting > numberOfFileToCache) { Thread.Sleep(1); }
+                                if ((j + (threadsCount * n)) == ind)
+                                {
+                                    FileStream f = File.OpenRead(fp.Value);
+                                long fileLen = getFileLength(fp.Value);
+                                data[ind] = new byte[fileLen];
+                                    //for (long i = 0; i < fileLen; i++)
+                                    //{
+                                    //    data[ind][i] = (byte)f.ReadByte();
+                                    //}
+                                    int read = f.Read(data[ind], 0, (int)fileLen);
+                                    f.Close();
+                                    if (read == fileLen)
+                                    {
+                                        isLoaded.Add(ind);
+                                        n++;
+                                    }
+                                }
+                            }
+                            catch
+                            {
+
+                            }
+                        }
+                    }));
+                t[j].Start();
+                }
+
+            }
+
+            public byte[] getFileData(string filePath)
+            {
+                int ind = getIndex(filePath);
+                while (!isLoaded.Contains(ind)) { Thread.Sleep(1); }
+                try { 
+                    currWriting = ind;
+                if (ind > 0)
+                {
+                    data[ind - 1] = new byte[0];
+                }
+                return data[ind];
+            }
+                catch { return new byte[0]; }
+            }
+
+            public long getFileLength(string filePath)
+            {
+                return fileSizes[getIndex(filePath)];
+            }
+
+        }
+
         public class ProgressListener
         {
             private ProgressBar progressBar;
@@ -304,6 +475,10 @@ namespace BackItUp
             private List<string> allFiles;
             private NotificationManager notificationManager;
             private bool standAlone = false;
+            private Thread UpdaterThread;
+            private long total;
+            private Int64 totalSize = 0;
+            private string currentPath = "";
 
 
             public ProgressListener(List<string> fileList, bool standAlone, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
@@ -317,15 +492,46 @@ namespace BackItUp
                 this.allFiles = fileList;
                 this.standAlone = standAlone;
                 notificationManager = new NotificationManager();
+                UpdaterThread = new Thread(() =>
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            progressBar.Dispatcher.Invoke(new Action(() =>
+                            {
+                                progressBar.Value = (total * 100) / totalSize;
+                                progressValue.Text = progressBar.Value.ToString() + "%";
+                            }));
+
+                            fileNameInProgress.Dispatcher.Invoke(new Action(() =>
+                            {
+                                fileNameInProgress.Text = currentPath;
+                                filesDone.Text = totalFiles.ToString() + " / " + allFiles.Count.ToString();
+
+                            }));
+
+                            Thread.Sleep(10);
+                        }
+                        catch { }
+
+                    }
+                });
             }
 
             internal void Failed(Exception e)
             {
+                try
+                {
+                    UpdaterThread.Abort();
+                    while (UpdaterThread.IsAlive) Thread.Sleep(10);
+                }
+                catch { }
                 progressBar.Dispatcher.Invoke(() =>
                 {
                 progressBar.Foreground = new SolidColorBrush(Color.FromArgb(255, 217, 83, 79));
                     progressBar.Value = 100;
-                    progressStatus.Text = "Failed";
+                    progressStatus.Text = "Failed: " + e.ToString();
                     progressValue.Text = "100%";
                     progressCancelButton.Content = "Done";
                 });
@@ -342,6 +548,12 @@ namespace BackItUp
             internal void progressComplete(long total, Int64 totalSize)
             {
 
+                try
+                {
+                    UpdaterThread.Abort();
+                    while (UpdaterThread.IsAlive) Thread.Sleep(10);
+                }
+                catch { }
                 progressBar.Dispatcher.Invoke(() =>
                 {
                 progressBar.Value = 100;
@@ -404,20 +616,20 @@ namespace BackItUp
 
             internal void progressUpdate(long total, Int64 totalSize)
             {
-                progressBar.Dispatcher.Invoke(() =>
-                {
-                    progressBar.Value = (total * 100) / totalSize;
-                    progressValue.Text = progressBar.Value.ToString() + "%";
-                });
+                this.total = total;
+                this.totalSize = totalSize;
             }
             internal void changeFileName(string path)
             {
                 totalFiles += 1;
-                fileNameInProgress.Dispatcher.Invoke(() =>
-                {
-                    fileNameInProgress.Text = path.Substring(path.LastIndexOf("\\")+1);
-                    filesDone.Text = totalFiles.ToString() + " / " + allFiles.Count.ToString();
-                });
+                currentPath = path;
+                
+                //fileNameInProgress.Dispatcher.Invoke(() =>
+                //{
+                //    //fileNameInProgress.Text = path.Substring(path.LastIndexOf("\\")+1);
+                //    fileNameInProgress.Text = path;
+                //    filesDone.Text = totalFiles.ToString() + " / " + allFiles.Count.ToString();
+                //});
             }
 
             internal void Started()
@@ -436,6 +648,8 @@ namespace BackItUp
                 });
 
                 stopwatch = Stopwatch.StartNew();
+
+                UpdaterThread.Start();
             }
             internal void StartedCalculatingFiles()
             {

@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:BackItUp"
              Startup="appStart"
-             xmlns:ui="http://schemas.modernwpf.com/2019">
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             xmlns:mica="clr-namespace:MicaWPF.Styles;assembly=MicaWPF">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -15,6 +16,11 @@
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.DeepPurple.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.Lime.xaml" />
+                <mica:ThemeDictionary DesignModeTheme="Dark" Theme="Auto" />
+                <!-- And Here (You can change to Light, Dark or auto here) -->
+                <!-- <mica:ThemeDictionary />  works too-->
+                <mica:ControlsDictionary />
+                <!-- This is mandatory -->
                 <!--modernwpf-->
                 <ui:ThemeResources />
                 <ui:XamlControlsResources />
