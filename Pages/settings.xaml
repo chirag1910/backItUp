@@ -24,6 +24,7 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -193,7 +194,7 @@
                          Background="{DynamicResource SystemAltLowColorBrush}"
                          Foreground="{DynamicResource SystemBaseMediumHighColorBrush}"
                          VerticalContentAlignment="Center"
-                         IsReadOnly="False" TextWrapping="Wrap" MaxWidth="500"
+                         IsReadOnly="False" TextWrapping="Wrap" MinWidth="75" MaxWidth="300"
                          ToolTip="(',' separated values) Example: cache,.exe,logs,.pyc"/>
                 <Button Style="{StaticResource ButtonRoundRevealStyle}"
                         Height="35" Width="35" Padding="5"
@@ -355,7 +356,38 @@
                 <TextBlock Text="9 GB"/>
                 <TextBlock Text="10 GB"/>
             </ComboBox>
-
+            <TextBlock Grid.Row="10" Grid.Column="0" Margin="20"
+        Style="{StaticResource SubtitleTextBlockStyle}" 
+        Foreground="{DynamicResource SystemBaseHighColorBrush}"
+        Text="On Successfull Backup"/>
+            <StackPanel Grid.Row="10" Grid.Column="1" Margin="20" Orientation="Horizontal">
+                <TextBox x:Name="execTextBox"  
+             Style="{StaticResource TextBoxRevealStyle}"
+              FontSize="18"
+              Background="{DynamicResource SystemAltLowColorBrush}"
+              Foreground="{DynamicResource SystemBaseMediumHighColorBrush}"
+              VerticalContentAlignment="Center"
+                         
+              IsReadOnly="False" TextWrapping="Wrap" MinWidth="75" MaxWidth="300"
+              ToolTip="After a successfull backup, execute this Command"/>
+                <Button Style="{StaticResource ButtonRoundRevealStyle}"
+             Height="35" Width="35" Padding="5"
+             Background="Transparent"
+             HorizontalAlignment="Left" Margin="20 0 0 0" ToolTip="Run Command Now"
+             Click="runCmd">
+                    <Grid>
+                        <Image Source="/Images/play.png" VerticalAlignment="Center"></Image>
+                        <Rectangle>
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="{DynamicResource SystemBaseHighColor}"/>
+                            </Rectangle.Fill>
+                            <Rectangle.OpacityMask>
+                                <ImageBrush ImageSource="/Images/play.png"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                    </Grid>
+                </Button>
+            </StackPanel>
 
         </Grid>
     </ScrollViewer>

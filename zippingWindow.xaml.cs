@@ -100,7 +100,7 @@ namespace BackItUp
                     zipPath += settingsData.saveAs + ".zip";
                     this.zipPath = zipPath;
                     zipper = new Zipper();
-                    zipper.Zip(stringResults, settingsData.ignore, settingsData.useTar, zipPath, settingsData.compressionLevel, settingsData.caching, settingsData.threads, settingsData.cacheSize, false, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+                    zipper.Zip(stringResults, settingsData.ignore, settingsData.useTar, zipPath, settingsData.compressionLevel, settingsData.caching, settingsData.threads, settingsData.cacheSize, false, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone, settingsData.execCmd);
                     Thread.Sleep(2000);
                     this.Dispatcher.Invoke(() =>
                     {

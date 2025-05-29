@@ -24,6 +24,7 @@
     <None Remove="Images\unzip.png" />
     <None Remove="Images\zip.png" />
     <None Remove="Images\zipFile.png" />
+	  <None Remove="Images\play.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -58,10 +59,22 @@
     <Resource Include="Images\unzip.png" />
     <Resource Include="Images\zip.png" />
     <Resource Include="Images\zipFile.png" />
+	  <Resource Include="Images\play.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

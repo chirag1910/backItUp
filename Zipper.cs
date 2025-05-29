@@ -44,14 +44,15 @@ namespace BackItUp
         private Dictionary<string, DateTime> modifiedTimes = new Dictionary<string, DateTime>();
         private List<string> directoryPaths = new List<string>();
         private bool useTar;
+        private string execCommandOnSuccess;
 
-
-        public void Zip(string[] paths, string[] ignores, bool useTar, string outputFilePath, int compressionLevel, bool caching, int cachingThreads, long cacheSizeGb, bool standAlone, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
+        public void Zip(string[] paths, string[] ignores, bool useTar, string outputFilePath, int compressionLevel, bool caching, int cachingThreads, long cacheSizeGb, bool standAlone, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone, string execCmdAfterSuccess = null)
         {
             this.useTar = useTar;
+            this.execCommandOnSuccess = execCmdAfterSuccess;
             filesHolder = new FilesHolder(cachingThreads, cacheSizeGb);
             this.caching = caching;
-            var listener = new ProgressListener(fileList, standAlone, progressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+            var listener = new ProgressListener(fileList, standAlone, progressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone, execCommandOnSuccess);
             listener.StartedCalculatingFiles();
             createTree(paths, ignores);
             if (caching)
@@ -701,10 +702,12 @@ namespace BackItUp
             private long total;
             private Int64 totalSize = 0;
             private string currentPath = "";
+            private string onSuccess;
 
 
-            public ProgressListener(List<string> fileList, bool standAlone, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
+            public ProgressListener(List<string> fileList, bool standAlone, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone, string onSuccess)
             {
+                this.onSuccess = onSuccess;
                 this.progressBar = progressBar;
                 this.progressStatus = progressStatus;
                 this.progressValue = progressValue;
@@ -785,6 +788,23 @@ namespace BackItUp
                     progressValue.Text = "100%";
                     progressCancelButton.Content = "Done";
                 });
+                Thread runOnSuccess = new Thread(() => {
+
+                    var process = new Process
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = "cmd.exe",
+                            Arguments = $"/C \"{onSuccess}\"",
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        }
+                    };
+
+                    process.Start();
+                });
+                runOnSuccess.IsBackground = true;
+                runOnSuccess.Start();
 
 
                 stopwatch.Stop();

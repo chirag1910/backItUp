@@ -14,5 +14,6 @@ namespace BackItUp
         public Int32 threads { get; set; }
         public Int32 cacheSize { get; set; }
         public Boolean useTar { get; set; }
+        public String execCmd { get; set; }
     }
 }

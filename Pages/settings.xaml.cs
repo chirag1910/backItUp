@@ -58,7 +58,7 @@ namespace BackItUp.Pages
             savePathTextBox.ToolTip = data.saveLocation;
             saveAsTextBox.Text = data.saveAs;
             selectedTime = (DateTime)data.backupTime;
-            
+            execTextBox.Text = data.execCmd;
 
             backupTimePicker.SelectedTime = selectedTime;
             if (data.useTar) CompressionLevelSelector.SelectedIndex = 4;
@@ -126,6 +126,11 @@ namespace BackItUp.Pages
                 saveSettings();
                 loadSettings();
             };
+            execTextBox.TextChanged += (_, __) =>
+            {
+                saveSettings();
+                loadSettings();
+            };
             CompressionLevelSelector.SelectionChanged += (_, __) =>
             {
                 saveSettings();
@@ -170,6 +175,7 @@ namespace BackItUp.Pages
             settingsPreferences.saveLocation = savePathTextBox.ToolTip.ToString();
             settingsPreferences.saveAs = saveAsTextBox.Text;
             settingsPreferences.backupTime = (DateTime)selectedTime;
+            settingsPreferences.execCmd = execTextBox.Text;
             if (CompressionLevelSelector.SelectedIndex == 0)
             {
                 settingsPreferences.compressionLevel = Deflater.NO_COMPRESSION;
@@ -288,6 +294,28 @@ namespace BackItUp.Pages
         {
             ignoreTextBox.Text = "";
             saveSettings();
+        }
+
+        private void runCmd(object sender, RoutedEventArgs e)
+        {
+            String dir_path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\BackItUp\\locals";
+            String settings_file_path = dir_path + "\\settingsPreferences.json";
+
+            String dataString = File.ReadAllText(settings_file_path);
+            SettingsPreferences settingsData = JsonConvert.DeserializeObject<SettingsPreferences>(dataString);
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/C \"{settingsData.execCmd}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            //run command
         }
         private void openBackupFolder(object sender, RoutedEventArgs e)
         {
