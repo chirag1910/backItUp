@@ -1,31 +1,21 @@
-﻿using ICSharpCode.SharpZipLib.Zip;
-using ICSharpCode.SharpZipLib.Zip.Compression;
-using K4os.Compression.LZ4.Streams;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using Newtonsoft.Json;
 using Notifications.Wpf;
 using SharpCompress.Common;
 using SharpCompress.Writers;
-using SharpCompress.Writers.Tar;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.IO.Packaging;
-using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Windows.Controls;
-using System.Windows.Markup;
 using System.Windows.Media;
-using Windows.Storage.Streams;
-using Zstandard.Net;
 using ZstdSharp;
+using ZstdSharp.Unsafe;
 
 namespace BackItUp
 {
@@ -345,19 +335,27 @@ namespace BackItUp
         private void createTar(Stream stream, ProgressListener listener)
         {
             long total = 0;
-            using (var buffered = new BufferedStream(stream, 1 * 1024 * 1024))
-            using (var zstdStream = new ZstandardStream(buffered, CompressionMode.Compress))
+            CompressionLevel compression = compressionLevel == 0 ? CompressionLevel.NoCompression : compressionLevel == 1 ? CompressionLevel.Fastest : compressionLevel == -1 ? CompressionLevel.Optimal : CompressionLevel.Optimal;
+
+            var compressor = new Compressor(level:3);
+
+            // Enable multi-threading (available in ZstdSharp v1.5.0+)
+            compressor.SetParameter(ZSTD_cParameter.ZSTD_c_nbWorkers, Environment.ProcessorCount);
+            compressor.SetParameter(ZSTD_cParameter.ZSTD_c_jobSize, 10 * 1024 * 1024);
+            compressor.SetParameter(ZSTD_cParameter.ZSTD_c_overlapLog, 6);
+            compressor.SetParameter(ZSTD_cParameter.ZSTD_c_checksumFlag, 0); // No checksums
+            compressor.SetParameter(ZSTD_cParameter.ZSTD_c_strategy, (int)ZSTD_strategy.ZSTD_fast); // Faster algo
+            using (var buffered = new BufferedStream(stream, 10 * 1024 * 1024))
+            using (var zstdStream = new CompressionStream(buffered, compressor))
             using (var countingStream = new CountingStream(zstdStream))
-            using (var tarWriter = WriterFactory.Open(countingStream, ArchiveType.Tar, CompressionType.None))
+            using (var tarWriter = new SharpCompress.Writers.Tar.TarWriter(countingStream, new SharpCompress.Writers.Tar.TarWriterOptions(CompressionType.None, true)))
             {
-                byte[] buffer = new byte[1 * 1024 * 1024];
                 listener.Started();
                 try
                 {
                     FileStream input = null;
 
 
-                    CompressionLevel compression = compressionLevel == 0 ? CompressionLevel.NoCompression : compressionLevel == 1 ? CompressionLevel.Fastest : compressionLevel == -1 ? CompressionLevel.Optimal : CompressionLevel.Optimal;
                     foreach (string file in fileList)
                     {
                         if (cancelFlag)
@@ -395,14 +393,14 @@ namespace BackItUp
                                 string givenPath = "";
                                 pathAndRelativePath.TryGetValue(file, out givenPath);
                                 var folderName = file.Replace(givenPath, "");
-                                if (!folderName.EndsWith("\\"))
-                                    folderName += "\\";
-                                folderName = folderName.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace('\\', '/');
 
+                                folderName = folderName.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace('\\', '/');
+                                if (!folderName.EndsWith("/"))
+                                    folderName += "/";
                                 DateTime modified;
                                 modifiedTimes.TryGetValue(file, out modified);
 
-                                tarWriter.Write(folderName, new MemoryStream(Array.Empty<byte>()), modified);
+                                tarWriter.Write(folderName, new MemoryStream(Array.Empty<byte>()));
 
 
                             }
