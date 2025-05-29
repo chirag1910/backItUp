@@ -1,22 +1,31 @@
 ﻿using ICSharpCode.SharpZipLib.Zip;
 using ICSharpCode.SharpZipLib.Zip.Compression;
+using K4os.Compression.LZ4.Streams;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using Notifications.Wpf;
-using System.Reflection;
+using SharpCompress.Common;
+using SharpCompress.Writers;
+using SharpCompress.Writers.Tar;
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
+using System.IO.Packaging;
+using System.IO.Pipes;
+using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Windows.Controls;
+using System.Windows.Markup;
 using System.Windows.Media;
-using Microsoft.Win32;
-using System.Text;
-using System.Linq;
-using System.Collections;
-using System.Collections.Concurrent;
-using K4os.Compression.LZ4.Streams;
-using System.IO.Compression;
+using Windows.Storage.Streams;
+using Zstandard.Net;
+using ZstdSharp;
 
 namespace BackItUp
 {
@@ -34,10 +43,12 @@ namespace BackItUp
         private bool caching = false;
         private Dictionary<string, DateTime> modifiedTimes = new Dictionary<string, DateTime>();
         private List<string> directoryPaths = new List<string>();
+        private bool useTar;
 
 
-        public void Zip(string[] paths, string[] ignores, string outputFilePath, int compressionLevel, bool caching, int cachingThreads, long cacheSizeGb, bool standAlone, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
+        public void Zip(string[] paths, string[] ignores, bool useTar, string outputFilePath, int compressionLevel, bool caching, int cachingThreads, long cacheSizeGb, bool standAlone, ProgressBar progressBar, TextBlock progressStatus, TextBlock progressValue, TextBlock fileNameInProgress, Button progressCancelButton, TextBlock filesDone)
         {
+            this.useTar = useTar;
             filesHolder = new FilesHolder(cachingThreads, cacheSizeGb);
             this.caching = caching;
             var listener = new ProgressListener(fileList, standAlone, progressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
@@ -46,6 +57,10 @@ namespace BackItUp
             if (caching)
                 filesHolder.startReading();
             zipPath = outputFilePath.Substring(0, outputFilePath.LastIndexOf("\\")+1) + ".~" + outputFilePath.Substring(outputFilePath.LastIndexOf("\\") + 1);
+            if (useTar)
+            {
+                zipPath = zipPath.Replace(".zip", ".tar.zst");
+            }
             prevZipPath = outputFilePath;
             this.compressionLevel = compressionLevel;
             if (File.Exists(zipPath))
@@ -114,12 +129,14 @@ namespace BackItUp
                                 if (s != "")
                                 {
                                     fileList.Add(path);
+                                    modifiedTimes.Add(path, Directory.GetLastWriteTime(path));
                                     directoryPaths.Add(path);
                                     pathAndRelativePath.Add(path, s);
                                 }
                                 else
                                 {
                                     fileList.Add(path);
+                                    modifiedTimes.Add(path, Directory.GetLastWriteTime(path));
                                     directoryPaths.Add(path);
                                     pathAndRelativePath.Add(path, path.Substring(0, path.LastIndexOf("\\")));
                                 }
@@ -178,17 +195,22 @@ namespace BackItUp
 
         private void createZip(Stream stream, ProgressListener listener)
         {
+            if (useTar)
+            {
+                createTar(stream, listener);
+                return;
+            }
             long total = 0;
             
             byte[] buffer = new byte[1 * 1024 * 1024];
             ZipArchive zos = null;
-
             listener.Started();
             try
             {
-                zos = new ZipArchive(stream, ZipArchiveMode.Create);
-                //zos.SetLevel(compressionLevel);
                 FileStream input = null;
+
+
+                zos = new ZipArchive(stream, ZipArchiveMode.Create);
                 CompressionLevel compression = compressionLevel == 0 ? CompressionLevel.NoCompression : compressionLevel == 1 ? CompressionLevel.Fastest : compressionLevel == -1 ? CompressionLevel.Optimal : CompressionLevel.Optimal;
                 foreach (string file in fileList)
                 {
@@ -201,10 +223,6 @@ namespace BackItUp
                     {
                         string givenPath = "";
                         pathAndRelativePath.TryGetValue(file, out givenPath);
-                        //ZipEntry ze = new ZipEntry(file.Replace(givenPath, ""));
-                        //ze.Size = filesHolder.getFileLength(file);
-                        //ze.Size = new FileInfo(file).Length;
-                        //zos.PutNextEntry(ze);
                         var entry = zos.CreateEntry(file.Replace(givenPath, "").TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace('\\', '/'), compression);
                         DateTime modified;
                         modifiedTimes.TryGetValue(file, out modified);
@@ -212,7 +230,6 @@ namespace BackItUp
                         var str = entry.Open();
                         str.Write(filesHolder.getFileData(file));
                         str.Close();
-                        //zos.Write(filesHolder.getFileData(file));
 
 
                         total += filesHolder.getFileLength(file);
@@ -236,23 +253,15 @@ namespace BackItUp
 
 
                             zos.CreateEntry(folderName);
-                            //ZipEntry ze = new ZipEntry(folderName);
-                            //ze.Size = 0;
-                            //zos.PutNextEntry(ze);
 
 
                         }
                         else
                         {
-                            //listener.Failed(new Exception());
                             string givenPath = "";
                             pathAndRelativePath.TryGetValue(file, out givenPath);
                             try
                             {
-                                //ZipEntry ze = new ZipEntry(file.Replace(givenPath, ""));
-
-                                //ze.Size = new FileInfo(file).Length;
-                                //zos.PutNextEntry(ze);
 
                                 var entry = zos.CreateEntry(file.Replace(givenPath, "").TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace('\\', '/'), compression);
                                 
@@ -289,58 +298,20 @@ namespace BackItUp
                         }
                     }
                 }
-                //if (fileList.Count > 0)
-                //    zos.CloseEntry();x
 
-                
+                try { zos.Dispose(); } catch { }
             }
             catch (Exception e)
             {
                 listener.Failed(e);
-                try
-                {
-                    //zos.Close();
-
-                }
-                catch
-                {
-
-                }
-                try
-                {
-                    //stream.Close();
-
-                }
-                catch
-                {
-
-                }
-
+                try { zos.Dispose(); } catch { }
                 if (File.Exists(zipPath)) { File.Delete(zipPath); }
                 cancelFlag = true;
 
             }
-            finally
-            {
-                try
-                {
-                    zos.Dispose();
-                    //zos.Close();
-
-                    //if (fileList.Count == 0)
-                    //{
-                    //    stream.Close();
-                    //}
-                }
-                catch (Exception)
-                {
-
-                }
-            }
             filesHolder.cancelAndClearAll();
             if (cancelFlag)
             {
-                stream.Close();
                 if (File.Exists(zipPath)) { File.Delete(zipPath); }
                 cancelFlag = false;
                 cancelButtonClicked = true;
@@ -350,6 +321,7 @@ namespace BackItUp
             {
                 if (!cancelButtonClicked)
                 {
+                    prevZipPath = useTar ? prevZipPath.Replace(".zip", ".tar.zst") : prevZipPath;
                     if (File.Exists(prevZipPath)) { File.Delete(prevZipPath); }
                     File.Move(zipPath, prevZipPath);
                     File.SetAttributes(prevZipPath, FileAttributes.Normal);
@@ -365,6 +337,204 @@ namespace BackItUp
             }
 
         }
+
+
+
+
+        private void createTar(Stream stream, ProgressListener listener)
+        {
+            long total = 0;
+            using (var buffered = new BufferedStream(stream, 1 * 1024 * 1024))
+            using (var zstdStream = new ZstandardStream(buffered, CompressionMode.Compress))
+            using (var countingStream = new CountingStream(zstdStream))
+            using (var tarWriter = WriterFactory.Open(countingStream, ArchiveType.Tar, CompressionType.None))
+            {
+                byte[] buffer = new byte[1 * 1024 * 1024];
+                listener.Started();
+                try
+                {
+                    FileStream input = null;
+
+
+                    CompressionLevel compression = compressionLevel == 0 ? CompressionLevel.NoCompression : compressionLevel == 1 ? CompressionLevel.Fastest : compressionLevel == -1 ? CompressionLevel.Optimal : CompressionLevel.Optimal;
+                    foreach (string file in fileList)
+                    {
+                        if (cancelFlag)
+                        {
+                            break;
+                        }
+                        listener.changeFileName(file);
+                        if (filesHolder.isInHolder(file))
+                        {
+                            string givenPath = "";
+                            pathAndRelativePath.TryGetValue(file, out givenPath);
+
+
+
+                            DateTime modified;
+                            modifiedTimes.TryGetValue(file, out modified);
+
+                            using (var memStream = new MemoryStream(filesHolder.getFileData(file)))
+                            {
+                                tarWriter.Write(file.Replace(givenPath, "").TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace('\\', '/'), memStream, modified);
+                            }
+
+                            total += filesHolder.getFileLength(file);
+
+                            listener.progressUpdate(total, allFilesSize);
+                            if (cancelFlag)
+                            {
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            if (directoryPaths.Contains(file))
+                            {
+                                string givenPath = "";
+                                pathAndRelativePath.TryGetValue(file, out givenPath);
+                                var folderName = file.Replace(givenPath, "");
+                                if (!folderName.EndsWith("\\"))
+                                    folderName += "\\";
+                                folderName = folderName.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace('\\', '/');
+
+                                DateTime modified;
+                                modifiedTimes.TryGetValue(file, out modified);
+
+                                tarWriter.Write(folderName, new MemoryStream(Array.Empty<byte>()), modified);
+
+
+                            }
+                            else
+                            {
+                                string givenPath = "";
+                                pathAndRelativePath.TryGetValue(file, out givenPath);
+                                try
+                                {
+
+                                    //var entry = zos.CreateEntry(file.Replace(givenPath, "").TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace('\\', '/'), compression);
+
+                                    DateTime modified;
+                                    modifiedTimes.TryGetValue(file, out modified);
+                                    input = File.OpenRead(file);
+
+                                    long bytesWrittenToTar = countingStream.BytesWritten;
+                                    long fileLen = new FileInfo(file).Length;
+                                    long totalOriginal = total;
+                                    bool isWriting = true;
+                                    Thread tarProgUpdater = new Thread(() =>
+                                    {
+
+                                        while (isWriting && countingStream.BytesWritten - bytesWrittenToTar < fileLen)
+                                        {
+                                            total = totalOriginal + countingStream.BytesWritten - bytesWrittenToTar;
+                                            listener.progressUpdate(total, allFilesSize);
+                                            Thread.Sleep(10);
+                                        }
+                                    });
+                                    tarProgUpdater.Start();
+                                    tarWriter.Write(file.Replace(givenPath, "").TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace('\\', '/'), input, modified);
+                                    input.Close();
+                                    isWriting = false;
+                                    try { tarProgUpdater.Abort(); } catch { }
+
+                                    total = totalOriginal + fileLen;
+                                    listener.progressUpdate(total, allFilesSize);
+                                    //while ((len = input.Read(buffer, 0, buffer.Length)) > 0)
+                                    //{
+                                    //    if (!cancelFlag)
+                                    //    {
+                                    //        str.Write(buffer, 0, len);
+                                    //        total += len;
+                                    //        listener.progressUpdate(total, allFilesSize);
+                                    //    }
+                                    //    else
+                                    //    {
+                                    //        break;
+                                    //    }
+                                    //}
+                                    //str.Close();
+                                    if (cancelFlag)
+                                    {
+                                        break;
+                                    }
+                                }
+                                finally
+                                {
+                                    input.Close();
+                                }
+                            }
+                        }
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    listener.Failed(e);
+                    cancelFlag = true;
+                }
+            }
+            filesHolder.cancelAndClearAll();
+            if (cancelFlag)
+            {
+                if (File.Exists(zipPath)) { File.Delete(zipPath); }
+                cancelFlag = false;
+                cancelButtonClicked = true;
+            }
+
+            try
+            {
+                if (!cancelButtonClicked)
+                {
+                    prevZipPath = useTar ? prevZipPath.Replace(".zip", ".tar.zst") : prevZipPath;
+                    if (File.Exists(prevZipPath)) { File.Delete(prevZipPath); }
+                    File.Move(zipPath, prevZipPath);
+                    File.SetAttributes(prevZipPath, FileAttributes.Normal);
+                    listener.progressComplete(total, allFilesSize);
+                }
+                else
+                {
+                    if (File.Exists(zipPath)) { File.Delete(zipPath); }
+                }
+            }
+            catch (Exception e)
+            {
+            }
+
+        }
+
+
+
+
+        class CountingStream : Stream
+        {
+            private readonly Stream _baseStream;
+            public long BytesWritten { get; private set; }
+
+            public CountingStream(Stream baseStream)
+            {
+                _baseStream = baseStream;
+            }
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                _baseStream.Write(buffer, offset, count);
+                BytesWritten += count;
+            }
+
+            // Override other required abstract members to delegate to _baseStream
+
+            public override bool CanRead => _baseStream.CanRead;
+            public override bool CanSeek => _baseStream.CanSeek;
+            public override bool CanWrite => _baseStream.CanWrite;
+            public override long Length => _baseStream.Length;
+            public override long Position { get => _baseStream.Position; set => _baseStream.Position = value; }
+            public override void Flush() => _baseStream.Flush();
+            public override int Read(byte[] buffer, int offset, int count) => _baseStream.Read(buffer, offset, count);
+            public override long Seek(long offset, SeekOrigin origin) => _baseStream.Seek(offset, origin);
+            public override void SetLength(long value) => _baseStream.SetLength(value);
+        }
+
 
         public class FilesHolder
         {

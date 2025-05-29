@@ -229,6 +229,7 @@
                 <TextBlock Text="Fastest Speed"/>
                 <TextBlock Text="Normal Compression"/>
                 <TextBlock Text="Best Compression"/>
+                <TextBlock Text="TarZst"/>
             </ComboBox>
 
 

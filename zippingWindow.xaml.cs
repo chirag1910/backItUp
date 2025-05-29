@@ -100,7 +100,7 @@ namespace BackItUp
                     zipPath += settingsData.saveAs + ".zip";
                     this.zipPath = zipPath;
                     zipper = new Zipper();
-                    zipper.Zip(stringResults, settingsData.ignore, zipPath, settingsData.compressionLevel, settingsData.caching, settingsData.threads, settingsData.cacheSize, false, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+                    zipper.Zip(stringResults, settingsData.ignore, settingsData.useTar, zipPath, settingsData.compressionLevel, settingsData.caching, settingsData.threads, settingsData.cacheSize, false, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
                     Thread.Sleep(2000);
                     this.Dispatcher.Invoke(() =>
                     {
@@ -126,7 +126,7 @@ namespace BackItUp
                     }
                     //this.zipPath = zipPath;
                     zipper = new Zipper();
-                    zipper.Zip(files, new string[0], zipPath, settingsData.compressionLevel, settingsData.caching, settingsData.threads, settingsData.cacheSize, true, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
+                    zipper.Zip(files, new string[0], settingsData.useTar, zipPath, settingsData.compressionLevel, settingsData.caching, settingsData.threads, settingsData.cacheSize, true, zipProgressBar, progressStatus, progressValue, fileNameInProgress, progressCancelButton, filesDone);
                     Registry.CurrentUser.DeleteSubKeyTree("Software\\BackItUp\\ZipCommand");
                 }
             }

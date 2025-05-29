@@ -13,5 +13,6 @@ namespace BackItUp
         public Boolean caching  { get; set; }
         public Int32 threads { get; set; }
         public Int32 cacheSize { get; set; }
+        public Boolean useTar { get; set; }
     }
 }

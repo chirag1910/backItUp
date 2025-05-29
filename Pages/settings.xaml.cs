@@ -61,7 +61,9 @@ namespace BackItUp.Pages
             
 
             backupTimePicker.SelectedTime = selectedTime;
-            if (data.compressionLevel == Deflater.NO_COMPRESSION) {
+            if (data.useTar) CompressionLevelSelector.SelectedIndex = 4;
+            else if (data.compressionLevel == Deflater.NO_COMPRESSION)
+            {
                 CompressionLevelSelector.SelectedIndex = 0;
             }
             else if (data.compressionLevel == Deflater.BEST_SPEED)
@@ -183,6 +185,11 @@ namespace BackItUp.Pages
             else if (CompressionLevelSelector.SelectedIndex == 3)
             {
                 settingsPreferences.compressionLevel = Deflater.BEST_COMPRESSION;
+            }
+            else
+            {
+                settingsPreferences.compressionLevel = Deflater.NO_COMPRESSION;
+                settingsPreferences.useTar = true;
             }
 
             if (ignoreTextBox.Text.Trim().Length > 0)
@@ -312,7 +319,8 @@ namespace BackItUp.Pages
                 zipPath += "\\";
             }
 
-            zipPath += settingsData.saveAs + ".zip";
+            zipPath += settingsData.saveAs;
+            zipPath += settingsData.useTar ? ".tar.zst" : ".zip";
             Process p = new Process();
             ProcessStartInfo ps = new ProcessStartInfo();
             ps.FileName = "CMD.exe";
